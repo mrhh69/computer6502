@@ -4,8 +4,23 @@
 
   include Definitions.s
 
-  section .text.entry
-reset:
+
+; from rtc lib
+  extern rtc_init
+  extern rtc_read
+  extern rtc_write
+
+; NOTE:
+; crt.s Includes the .text.entry and .text.vectors for us
+; All we need to define here are
+  global pre_init         ; called before anything
+  global interrupt_timer1 ; interrupts
+  global button_press
+
+
+  section text
+
+pre_init:
   sei
   lda #$ff
   sta DDRA
@@ -21,12 +36,17 @@ reset:
   cli
   jsr initialize_lcd
 
-
 ; RTC init
-  ; Setup idle state:
-  lda #(SDA | SCL)
-  sta PORTA
-  WAIT_US 10000
+  jsr rtc_init
+; all pre-initialization complete, it's C time
+  rts
+
+interrupt_timer1:
+  rts
+button_press:
+  rts
+
+
 
   lda #$02
   sta $00
@@ -34,7 +54,7 @@ reset:
   sta $01
   lda #$00
   ldx #1
-  jsr read_rtc
+  jsr rtc_read
 
   lda $02
   and #$80
@@ -46,7 +66,7 @@ reset:
   sta $01
   lda #$00
   ldx #8
-  jsr write_rtc
+  jsr rtc_write
 
 .no_reset:
 ; SETUP Timer2 to countdown 4096hz pulses on PB6
@@ -68,7 +88,7 @@ date_loop:
   lda #$00
   ldx #8
   cli
-  jsr read_rtc
+  jsr rtc_read
 
 
   ldx $02 + 0
@@ -154,36 +174,3 @@ rtc_default:
   byte %00010001 ; control register (OUT 0 0 SQWE 0 0 RS1 RS0)
 
   include 4BitLCD.s
-
-
-
-
-nmi:
-  rti
-irq:
-  pha
-  lda IFR
-  cmp #INT_T1
-  beq .timer1
-  cmp #INT_T2
-  beq .timer2
-.timer1:
-  lda #INT_T1
-  sta IFR
-  pla
-  rti
-.timer2:
-  stp
-  lda #INT_T2
-  sta IFR
-  pla
-  rti
-
-
-
-
-
-  section .text.vectors
-  word nmi
-  word reset
-  word irq

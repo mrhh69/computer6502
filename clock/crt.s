@@ -6,27 +6,32 @@
 ;  - .text.entry: entry point for 6502
 ;  - .text.vectors: vectors to be loaded at 0xfffa
 ; Externs:
-;  - _main: main function
+;  - _main: main function (C abi)
+;  - interrupt_timer1: timer1 runout (assembly abi)
+;  - button_press: ca1 interrupt (assembly abi)
+;    -> NOTE: generally used for stepping programs (debugging)
+;  - pre_init: called before any C initialization (assembly abi)
 ;  - __[data/bss]_[loc/start/end]: linker-defined data/bss segment info
 
 
   include cregs.s
+  include Definitions.s
 
 
 STACK_START = $4000
 
-PORTA = $6001
-IFR =   $600D
-  ;include Definitions.s
 
   extern _main
+  extern pre_init
   extern interrupt_timer1
   extern button_press ; interrupt CA1
 
   section .text.entry
 reset:
-  sei
+  jsr pre_init
 
+
+; Setup for C code (initialize data/bss, setup stack)
 ; Copy from (__data_loc) -> (__data_start-__data_end)
   lda #(__data_loc & $ff)
   ldx #(__data_loc >> 8)
@@ -87,23 +92,24 @@ bss_loop_out:
   sta sp
   stx sp + 1
 
-
+; Enter main function, once initialization has completed
   jsr _main
-
+; Upon main function return:
   ;ora #%10000000
   ;sta PORTA
-
+; Stop the processor. Nothing more.
   stp
 
-  extern button_press
+
+
 
 irq:
   pha
   ; Determine source of interrupt:
   lda IFR
-  bit #%01000000
+  bit #INT_T1
   bne .irq_timer1
-  bit #%00000010
+  bit #INT_CA1
   bne .irq_ca1
   ; Should not happen hopefully:
   lda #$aa
@@ -111,12 +117,12 @@ irq:
   stp
 
 .irq_timer1: ; Timer1 interrupt
-  lda #%01000000 ; Clear Interrupt flag
+  lda #INT_T1 ; Clear Interrupt flag
   sta IFR
   jsr interrupt_timer1
   jmp .irq_out
 .irq_ca1: ; CA1 Interrupt
-  lda #%00000010 ; Clear Flag
+  lda #INT_CA1 ; Clear Flag
   sta IFR
   jsr button_press ; external subroutine
   jmp .irq_out

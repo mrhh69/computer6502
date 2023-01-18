@@ -15,12 +15,23 @@ RTC_READ  = ((RTC_ADDR<<1)|1)
 
   include Definitions.s
 
+  global rtc_init
+  global rtc_write
+  global rtc_read
+
+
   section text
 
+rtc_init:
+; Setup idle state:
+  lda #(SDA | SCL)
+  sta PORTA
+  WAIT_US 10000
+  rts
 
 ; Buffer pointer in $00, buffer length in X register
 ; RTC read start address in A register, Y register destroyed
-write_rtc:
+rtc_write:
   phx
   pha
   jsr put_start
@@ -50,7 +61,7 @@ write_rtc:
 
 ; Buffer pointer in $00, buffer length in X register
 ; RTC read start address in A register, Y register destroyed
-read_rtc:
+rtc_read:
   phx
   pha
   jsr put_start
@@ -155,11 +166,6 @@ get_ack:
   jsr get_bit
   lda #(SCL | SDA)
   sta DDRA
-  txa
-  clc
-  adc #'0'
-  jsr print_char
-  txa
   rts
 ; if BE, then writes  0, else 1
 ; Destroys A register
