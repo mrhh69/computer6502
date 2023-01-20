@@ -33,6 +33,7 @@ int main() {
     /* rtc_read into a buffer */
     rtc_read(buf, 7, 0);
     /* print data onto lcd using putc and lcdins */
+    /*
     lcdins(0x02);
     putc('0' + ((buf[2] >> 4) & 0xf));
     putc('0' + (buf[2] & 0xf));
@@ -43,6 +44,7 @@ int main() {
     putc('0' + ((buf[0] >> 4) & 0x7));
     putc('0' + (buf[0] & 0xf));
     putc(buf[0] & 0x80 ? 'S' : ' ');
+    */
   }
 
   //return 0;
