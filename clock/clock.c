@@ -55,7 +55,8 @@ int main() {
   }
 
   lcdins(0x01); // reset lcd
-
+  lcdins(15);
+  lcdins(69);
 
   /* enter loop */
   timer2_loop();
