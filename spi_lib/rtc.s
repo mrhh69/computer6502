@@ -11,7 +11,8 @@ RTC_ADDR = %1101000
 RTC_WRITE = ((RTC_ADDR<<1)|0)
 RTC_READ  = ((RTC_ADDR<<1)|1)
 
-
+; NOTE: after some debugging, it turns out read_rtc does indeed hang on first bus failure
+; Maybe do some run throughs in an emulator in read_rtc to fully diagnose problem
 
   include Definitions.s
 
