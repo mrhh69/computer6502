@@ -1,4 +1,4 @@
-
+;
 ; 8 bit regs ($10 - $2f)
 r0  = $10
 r1  = $11
@@ -12,7 +12,7 @@ r8  = $18
 r9  = $19
 r10 = $1a
 r11 = $1b
-r12 = $1c
+;r12 = $1c
 r13 = $1d
 r14 = $1e
 r15 = $1f
@@ -43,41 +43,41 @@ sp = $40
 
 
 
-  global r0
-  global r1
-  global r2
-  global r3
-  global r4
-  global r5
-  global r6
-  global r7
-  global r8
-  global r9
-  global r10
-  global r11
-  global r12
-  global r13
-  global r14
-  global r15
-  global r16
-  global r17
-  global r18
-  global r19
-  global r20
-  global r21
-  global r22
-  global r23
-  global r24
-  global r25
-  global r26
-  global r27
-  global r28
-  global r29
-  global r30
-  global r31
+  ;global r0
+  ;global r1
+  ;global r2
+  ;global r3
+  ;global r4
+  ;global r5
+  ;global r6
+  ;global r7
+  ;global r8
+  ;global r9
+  ;global r10
+  ;global r11
+  ;global r12
+  ;global r13
+  ;global r14
+  ;global r15
+  ;global r16
+  ;global r17
+  ;global r18
+  ;global r19
+  ;global r20
+  ;global r21
+  ;global r22
+  ;global r23
+  ;global r24
+  ;global r25
+  ;global r26
+  ;global r27
+  ;global r28
+  ;global r29
+  ;global r30
+  ;global r31
 
-  global btmp0
-  global btmp1
-  global btmp2
-  global btmp3
-  global sp
+  ;global btmp0
+  ;global btmp1
+  ;global btmp2
+  ;global btmp3
+  ;global sp
