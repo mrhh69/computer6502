@@ -19,7 +19,7 @@ RTC_READ  = ((RTC_ADDR<<1)|1)
   global rtc_init
   global rtc_write
   global rtc_read
-  extern _putc
+  ;extern _putc
 
 
   section text

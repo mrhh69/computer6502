@@ -24,6 +24,7 @@ STACK_START = $4000
   extern _main
   extern pre_init
   extern interrupt_timer1
+  extern interrupt_timer2
   extern button_press ; interrupt CA1
 
   section .text.entry
@@ -109,6 +110,8 @@ irq:
   lda IFR
   bit #INT_T1
   bne .irq_timer1
+  bit #INT_T2
+  bne .irq_timer2
   bit #INT_CA1
   bne .irq_ca1
   ; Should not happen hopefully:
@@ -121,6 +124,11 @@ irq:
   sta IFR
   jsr interrupt_timer1
   jmp .irq_out
+.irq_timer2:
+  lda #INT_T2
+  sta IFR
+  jsr interrupt_timer2
+  jmp .irq_out
 .irq_ca1: ; CA1 Interrupt
   lda #INT_CA1 ; Clear Flag
   sta IFR
@@ -132,6 +140,8 @@ irq:
   rti
 nmi:
   rti
+
+
 
   section .text.vectors
   word nmi

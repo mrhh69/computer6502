@@ -15,7 +15,7 @@ const char rtc_defaults[RTC_DEFAULT_LEN] = {
   0x15, // Day of the month
   0x01, // month
   0x23, // year
-  0x11, // control register (OUT 0 0 SQWE 0 0 RS1 RS0)
+  0x10, // control register (OUT 0 0 SQWE 0 0 RS1 RS0)
 };
 
 static char buf[8];
@@ -42,15 +42,26 @@ void update_lcd_clock() {
 }
 
 int main() {
+  char c;
   /* first, rtc_read to make sure clock is running */
   rtc_read(buf, 8, 0);
   if (buf[0] & 0x80) {
     /* if not, then re-write rtc defaults */
     rtc_write((char *)rtc_defaults, RTC_DEFAULT_LEN, 0);
   }
+  if (buf[7] != rtc_defaults[7]) {
+    /* rewrite control register separately */
+    rtc_write((char *)&rtc_defaults[7], 1, 7);
+  }
 
   lcdins(0x01); // reset lcd
+
+
+  /* enter loop */
+  timer2_loop();
+  /*
   for (;;) {
     update_lcd_clock();
   }
+  */
 }
