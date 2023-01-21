@@ -3,6 +3,11 @@
 #define RTC_DEFAULT_LEN 8
 
 const char rtc_defaults[RTC_DEFAULT_LEN] = {
+  /* NOTE: these numbers are in the format of 0b0hhhllll
+   * h -> the first digit of the decimal value
+   * l ->  the last digit of the decimal value
+   * So, 0x15 == 1 and 5 (or 15 decimal)
+   */
   0x02, // Seconds (top bit is CH, clock halt)
   0x15, // Minutes
   0x18, // Hours (bit 6 high is 12-hour mode select)
@@ -15,12 +20,28 @@ const char rtc_defaults[RTC_DEFAULT_LEN] = {
 
 static char buf[8];
 
+
+void update_lcd_clock() {
+  /* rtc_read into a buffer */
+  rtc_read(buf, 7, 0);
+  /* print data onto lcd using putc and lcdins */
+  /* NOTE:
+   * not LCD reset, because quickly clearing and
+   * setting the LCD screen causes wierd visual effects)
+   */
+  lcdins(0x02); // LCD return cursor to 0
+  putc('0' + ((buf[2] >> 4) & 0xf));
+  putc('0' + (buf[2] & 0xf));
+  putc(':');
+  putc('0' + ((buf[1] >> 4) & 0xf));
+  putc('0' + (buf[1] & 0xf));
+  putc(':');
+  putc('0' + ((buf[0] >> 4) & 0x7));
+  putc('0' + (buf[0] & 0xf));
+  putc(buf[0] & 0x80 ? 'S' : ' ');
+}
+
 int main() {
-  lcdins(0x01); // reset
-  putc('h'); // hello world
-
-
-
   /* first, rtc_read to make sure clock is running */
   rtc_read(buf, 8, 0);
   if (buf[0] & 0x80) {
@@ -28,24 +49,8 @@ int main() {
     rtc_write((char *)rtc_defaults, RTC_DEFAULT_LEN, 0);
   }
 
-  lcdins(0x01);
+  lcdins(0x01); // reset lcd
   for (;;) {
-    /* rtc_read into a buffer */
-    rtc_read(buf, 7, 0);
-    /* print data onto lcd using putc and lcdins */
-    /*
-    lcdins(0x02);
-    putc('0' + ((buf[2] >> 4) & 0xf));
-    putc('0' + (buf[2] & 0xf));
-    putc(':');
-    putc('0' + ((buf[1] >> 4) & 0xf));
-    putc('0' + (buf[1] & 0xf));
-    putc(':');
-    putc('0' + ((buf[0] >> 4) & 0x7));
-    putc('0' + (buf[0] & 0xf));
-    putc(buf[0] & 0x80 ? 'S' : ' ');
-    */
+    update_lcd_clock();
   }
-
-  //return 0;
 }
