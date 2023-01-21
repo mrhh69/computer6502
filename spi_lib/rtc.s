@@ -31,6 +31,8 @@ rtc_init:
 
 ; Buffer pointer in $00, buffer length in X register
 ; RTC read start address in A register, Y register destroyed
+; NOTE: 2 ack's (plus 8 in the loop) to check
+; ack handling is similar here as in rtc_read -> reference the comments there
 rtc_write:
   phx
   pha
@@ -38,11 +40,17 @@ rtc_write:
   ldx #RTC_WRITE
   jsr put_byte
   jsr get_ack
+  bne .bad_ack1
   plx
+  phx
   jsr put_byte
   jsr get_ack
+  bne .bad_ack2
 
+  pla
   plx
+  phx ; preserve stack
+  pha
   ldy #0
 .loopx:
   phx
@@ -52,6 +60,7 @@ rtc_write:
   jsr put_byte
   ply
   jsr get_ack
+  bne .bad_ack3
   plx
   iny
   dex
@@ -59,8 +68,18 @@ rtc_write:
   jsr put_stop
   rts
 
+.bad_ack3:
+  plx
+.bad_ack1:
+.bad_ack2:
+  pla
+  plx
+  jmp rtc_write
+
+
 ; Buffer pointer in $00, buffer length in X register
 ; RTC read start address in A register, Y register destroyed
+; NOTE: 3 ack's to check, after writing command bytes to the RTC
 rtc_read:
   phx
   pha
@@ -68,17 +87,24 @@ rtc_read:
   ldx #RTC_WRITE
   jsr put_byte
   jsr get_ack
+  bne .bad_ack1
   plx ; pull A register as X register
+  phx ; preserve stack w/ A and X (in case a bad_ack necessitates a function re-entry)
   jsr put_byte
   jsr get_ack
+  bne .bad_ack2
 
   jsr put_stop
+; NOTE: this seems to be a problem point
+; (from previous tests, this was where the SPI bus seemed to fail)
   jsr rtcdelay;WAIT_US 10000
   jsr put_start
   ldx #((RTC_ADDR<<1) | 1)
   jsr put_byte
   jsr get_ack
+  bne .bad_ack3
 ; Now, read into buffer
+  pla ; this pla does nothing, but is necessary to preserve stack (as mentioned on above phx)
   plx
   ldy #0
 .loopx:
@@ -102,6 +128,14 @@ rtc_read:
   jsr put_stop
   rts
 
+.bad_ack1:
+.bad_ack2:
+.bad_ack3:
+  pla
+  plx
+; RTC returned NAK when it shouldn't have, try again
+  jmp rtc_read
+
 
 ; RTC calls:
 put_start:
@@ -113,7 +147,7 @@ put_start:
   jsr rtcdelay ; (start hold)
   rts
 put_stop:
-  jsr rtcdelay;WAIT_US LOW_US
+  jsr wait_low
   lda #SCL
   sta PORTA
   jsr rtcdelay;WAIT_US STOP_DELAY_US
@@ -160,12 +194,14 @@ put_byte:
   bne .loopy
   rts
 
+; returns ack into A register
 get_ack:
   lda #SCL
   sta DDRA
   jsr get_bit
   lda #(SCL | SDA)
   sta DDRA
+  txa
   rts
 ; if BE, then writes  0, else 1
 ; Destroys A register
@@ -178,20 +214,20 @@ put_bit:
   lda #0
 .clockup:
   sta PORTA
-  jsr rtcdelay;WAIT_US LOW_US ; NOTE: WAIT_US protects all registers
+  jsr wait_low ; NOTE: waitus macro protects all registers
   ora #SCL
   sta PORTA
-  jsr rtcdelay;WAIT_US HIGH_US
+  jsr wait_high
   eor #SCL
   sta PORTA
   rts
 ; Assumes SCL = 0 SDA = configured for input
 ; Returns into X register
 get_bit:
-  jsr rtcdelay;WAIT_US LOW_US
+  jsr wait_low
   lda #SCL
   sta PORTA
-  jsr rtcdelay;WAIT_US HIGH_US
+  jsr wait_high
   lda PORTA
   and #SDA
   beq .notone
@@ -205,9 +241,15 @@ get_bit:
   rts
 
 
+wait_low:
+  WAIT_US LOW_US
+  rts
+wait_high:
+  WAIT_US HIGH_US
+  rts
 
 rtcdelay:
-  repeat 100
+  repeat 20
   nop
   endrepeat
   rts
