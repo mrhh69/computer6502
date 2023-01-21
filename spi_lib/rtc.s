@@ -74,6 +74,7 @@ rtc_write:
   plx
 .bad_ack1:
 .bad_ack2:
+  jsr put_stop
   pla
   plx
   jmp rtc_write
@@ -133,8 +134,10 @@ rtc_read:
 .bad_ack1:
 .bad_ack2:
 .bad_ack3:
-  lda #'0'
-  jsr _putc
+  ;lda #'0'
+  ;jsr _putc
+; put RTC back into a stop condition in preparation for a re-try
+  jsr put_stop
   pla
   plx
 ; RTC returned NAK when it shouldn't have, try again

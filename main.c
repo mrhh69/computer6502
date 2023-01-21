@@ -6,8 +6,8 @@
 #include <time.h>
 
 
-#define TRY1 "/dev/cu.usbmodem14101"
-#define TRY2 "/dev/cu.usbmodem14201"
+#define TRY1 "/dev/cu.usbmodem101"
+#define TRY2 "/dev/cu.nothing"
 
 #define FILE_WRITE_SIZE 2048
 
