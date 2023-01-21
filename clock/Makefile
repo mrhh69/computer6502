@@ -48,4 +48,4 @@ clean:
 	rm -f *.vobj $(TMP_VBCC_ASM) main.bin
 	make -C $(SPI_DIR) clean
 dump: main.bin
-	cat listing.txt | grep -v ": local abs" | ack --color-match=red --passthru "0x.... [_a-zA-Z0-9]*: global"
+	cat listing.txt | grep -v ": local abs" | ack --color-match=red --passthru "0x.... [_a-zA-Z0-9]*: global .*"
