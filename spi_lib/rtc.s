@@ -18,6 +18,7 @@ RTC_READ  = ((RTC_ADDR<<1)|1)
   global rtc_init
   global rtc_write
   global rtc_read
+  extern _putc
 
 
   section text
@@ -131,6 +132,8 @@ rtc_read:
 .bad_ack1:
 .bad_ack2:
 .bad_ack3:
+  lda #'0'
+  jsr _putc
   pla
   plx
 ; RTC returned NAK when it shouldn't have, try again
