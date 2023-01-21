@@ -1,7 +1,7 @@
 
 
 
-
+  include cregs.s
   include Definitions.s
 
 
@@ -47,8 +47,31 @@ button_press:
   rts
 
 
+; TODO: move all wrapper functions into their respective folders (spi_lib/)
+; Wrapper functions (for rtc)
+  global _rtc_write
+  global _rtc_read
 
-; Wrapper functions
+; __reg("a/x") char * buf, __reg("r0") unsigned char buf_len, __reg("r1") unsigned char rtc_addr
+_rtc_write:
+  sta $00
+  stx $01
+  ldx r0
+  lda r1
+  jsr rtc_write
+  rts
+; __reg("a/x") char * buf, __reg("r0") unsigned char buf_len, __reg("r1") unsigned char rtc_addr
+_rtc_read:
+  sta $00
+  stx $01
+  ldx r0
+  lda r1
+  jsr rtc_read
+  rts
+
+
+
+; Wrapper functions (for lcd)
   global _putc
   global _lcdins
 

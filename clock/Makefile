@@ -23,7 +23,7 @@ VASM_FLAGS=-wdc02 -I"../"
 VLINK_FLAGS=-Mlisting.txt
 # 1+2+4+8+16+32+128+256
 VCC_FLAGS=-c02 -O=447
-VCA_FLAGS=-wdc02
+VCA_FLAGS=-wdc02 -opt-branch
 
 SRCS=  $(wildcard *.s)
 VOBJS= $(patsubst %.s,%.vobj,$(SRCS))
