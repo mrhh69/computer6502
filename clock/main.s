@@ -1,7 +1,7 @@
 
 
 
-
+  include cregs.s
   include Definitions.s
 
 
@@ -15,8 +15,15 @@
 ; All we need to define here are
   global pre_init         ; called before anything
   global interrupt_timer1 ; interrupts
+  global interrupt_timer2
   global button_press
 
+; from clock.c
+  extern _update_lcd_clock
+
+  global _timer2_loop
+; PB6 oscillating at 32768, 4096/32768 = 1/8 hz
+TIMER2_COUNT = 4096
 
   section text
 
@@ -41,136 +48,98 @@ pre_init:
 ; all pre-initialization complete, it's C time
   rts
 
+
+; Enter a timer2 loop (periodically calling update_lcd_clock)
+_timer2_loop:
+; enable and start timer2
+  lda (INT_EN|INT_T2)
+  sta IER
+  lda #(T2_COUNTPB6)
+  ora ACR
+  sta ACR
+
+  lda #'s'
+  jsr print_char
+
+.loop:
+; set flag to 0
+  lda #0
+  sta _timer2_interrupted
+; start timer2
+  lda #<TIMER2_COUNT
+  sta T2CL
+  lda #>TIMER2_COUNT
+  sta T2CH
+.wai_loop:
+  wai
+; wait for interrupted flag to be set
+  lda _timer2_interrupted
+  beq .wai_loop
+; do periodic stuff here:
+  jsr _update_lcd_clock
+
+  bra .loop
+
+
+interrupt_timer2:
+; set interrupted flag
+  lda #1
+  sta _timer2_interrupted
+  lda #'2'
+  jsr print_char
+; reset timer 2
+  lda #<TIMER2_COUNT
+  sta T2CL
+  lda #>TIMER2_COUNT
+  sta T2CH
+  rts
 interrupt_timer1:
   rts
 button_press:
   rts
 
+  section bss
+_timer2_interrupted: reserve 1
 
+  section text
 
-  lda #$02
+; TODO: move all wrapper functions into their respective folders (spi_lib/)
+; Wrapper functions (for rtc)
+  global _rtc_write
+  global _rtc_read
+
+; __reg("a/x") char * buf, __reg("r0") unsigned char buf_len, __reg("r1") unsigned char rtc_addr
+_rtc_write:
   sta $00
-  lda #$00
-  sta $01
-  lda #$00
-  ldx #1
-  jsr rtc_read
-
-  lda $02
-  and #$80
-  ;beq .no_reset
-  ; Reset RTC to defaults, as it is stopped currently
-  lda #<rtc_default
-  sta $00
-  lda #>rtc_default
-  sta $01
-  lda #$00
-  ldx #8
+  stx $01
+  ldx r0
+  lda r1
   jsr rtc_write
-
-.no_reset:
-; SETUP Timer2 to countdown 4096hz pulses on PB6
-  ;lda #(T1_ONESHOT|T2_COUNTPB6)
-  ;sta ACR
-
-date_loop:
-  ;lda #(1024 & $ff)
-  ;sta T2CL
-  ;lda #(1024 >> 8)
-  ;sta T2CH
-  ;cli
-  ;wai
-  ; (&buf[8] = 0x0002;)
-  lda #$02
+  rts
+; __reg("a/x") char * buf, __reg("r0") unsigned char buf_len, __reg("r1") unsigned char rtc_addr
+_rtc_read:
   sta $00
-  lda #$00
-  sta $01
-  lda #$00
-  ldx #8
-  cli
+  stx $01
+  ldx r0
+  lda r1
   jsr rtc_read
+  rts
 
 
-  ldx $02 + 0
-  jmp checkthatflag
 
-  ldx $02 + 2
-  txa
-  lsr
-  lsr
-  lsr
-  lsr
-  clc
-  adc #'0'
-  jsr print_char
-  txa
-  and #$f
-  clc
-  adc #'0'
-  jsr print_char
-  lda #':'
-  jsr print_char
+; Wrapper functions (for lcd)
+  global _putc
+  global _lcdins
 
-  ldx $02 + 1
-  txa
-  lsr
-  lsr
-  lsr
-  lsr
-  clc
-  adc #'0'
-  jsr print_char
-  txa
-  and #$f
-  clc
-  adc #'0'
-  jsr print_char
-  lda #':'
-  jsr print_char
 
-  ldx $02 + 0
-  txa
-  lsr
-  lsr
-  lsr
-  lsr
-  and #$7
-  clc
-  adc #'0'
+; __reg("a") char character
+_putc:
   jsr print_char
-  txa
-  and #$f
-  clc
-  adc #'0'
-  jsr print_char
-  lda #'.'
-checkthatflag:
-  txa
-  and #$80
-  beq .notstop
-  lda #'S'
-  jsr print_char
-  stp
-.notstop:
-
-  lda #%1 ; Reset display
+  rts
+; __reg("a") char instruction
+_lcdins:
   jsr lcd_instruction
-  jmp date_loop
+  rts
 
-done:
-  bra done
-
-
-
-; char defaults[8]
-rtc_default:
-  byte $02 ; Seconds (top bit is CH, clock halt)
-  byte $15
-  byte $18 ; Hours (bit 6 high is 12-hour mode select)
-  byte $01 ; Day of the week?
-  byte $24 ; Day of the month
-  byte $12 ; month
-  byte $22 ; year
-  byte %00010001 ; control register (OUT 0 0 SQWE 0 0 RS1 RS0)
 
   include 4BitLCD.s

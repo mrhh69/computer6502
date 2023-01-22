@@ -6,10 +6,13 @@
 #include <time.h>
 
 
-#define TRY1 "/dev/cu.usbmodem14101"
-#define TRY2 "/dev/cu.usbmodem14201"
 
-#define FILE_WRITE_SIZE 2048
+#define TRY1 "/dev/cu.usbmodem101"
+#define TRY2 "/dev/cu.nothing"
+#define STTY "/bin/stty"
+#define BAUD_STR "115200"
+
+#define FILE_WRITE_SIZE 64*4
 
 FILE * ard;
 int ardfd;
@@ -31,16 +34,14 @@ uint16_t geti() {return get() | (get() << 8);}
 #define INTERNALS 8
 
 
-void ardread(int addr, int len) {
+void ardread(char *buf, uint16_t len, uint16_t addr) {
   put(SADDR); puti(addr);
   put(SLEN); puti(len);
 
   put(READ);
-  for (int i = 0; i < len; i++) {
-    if (!(i % 16)) printf("\n%04x: ", i + addr);
-    printf("%02x, ", get());
+  for (uint16_t i = 0; i < len; i++) {
+    buf[i] = get();
   }
-  printf("\n");
 }
 void ardcheck(int addr, char value) {
   char g;
@@ -74,6 +75,7 @@ void ardpagewrite(int addr, int len, char * buf) {
   }
 }
 
+/* len aligned to 64 */
 void filewrite(char * f, int pos, int seek, int len) {
   char c;
   FILE * in;
@@ -83,6 +85,23 @@ void filewrite(char * f, int pos, int seek, int len) {
 
   fseek(in, seek, SEEK_SET);
 
+  for (int i = 0; i < len / 64; i++) {
+    char buf[64], obuf[64];
+    ardread(buf, 64, pos + i * 64);
+
+    dirty = 0;
+    for (int j = 0; j < 64; j++) {
+      if (buf[j] != (obuf[j] = fgetc(in))) {
+        dirty++;
+      }
+    }
+    if (dirty) {
+      /* write out, do a page write always */
+      ardpagewrite(pos + i * 64, 64, obuf);
+    }
+    printf("%i:%i\n", i, dirty);
+  }
+  /*
   for (int i = 0; i < len; i++) {
     if (!(i % 64)) {
       put(SADDR); puti(pos + i);
@@ -98,6 +117,7 @@ void filewrite(char * f, int pos, int seek, int len) {
     //printf("%i:%x\n", i, buf[i % 64]);
     put(buf[i % 64]);
   }
+  */
 }
 void fileverify(char * f, int pos, int seek, int len) {
   FILE * in;
@@ -120,14 +140,20 @@ void fileverify(char * f, int pos, int seek, int len) {
 }
 
 int main(int argc, char * argv[]) {
-  time_t t;
-  if ((ard = fopen(TRY1, "r+")));
+  char * dev;
+  if ((ard = fopen(TRY1, "r+"))) dev = TRY1;
   else {
     printf("fopen: %i\n", errno);
-    if ((ard = fopen(TRY2, "r+")));
+    if ((ard = fopen(TRY2, "r+"))) dev = TRY2;
     else {
       printf("fopen: %i\n", errno); exit(1);
     }
+  }
+  /* directly after opening arduino tty, set baud rate */
+  if (fork());
+  else {
+    char *argv[] = {STTY, "-f", dev, BAUD_STR, 0};
+    execv(STTY, argv);
   }
   char * writef = argc > 1 ? argv[1] : "a.out";
 
@@ -137,17 +163,23 @@ int main(int argc, char * argv[]) {
 
   put(SDPOFF);
 
-  srand((unsigned int)time(&t));
+  srand((unsigned int)time(NULL));
   buf[0] = rand() & 0xff;
   buf[1] = buf[0] + 15;
+
+
   ardwrite(0, 1, &buf[0]);
   ardwrite(1, 1, &buf[1]);
   ardcheck(0, buf[0]);
   ardcheck(1, buf[1]);
 
+  filewrite("/dev/null", 0, 0, FILE_WRITE_SIZE);
   printf("writing file '%s'...\n", writef);
+  clock_t start = time(NULL);
   filewrite (writef, 0, 0, FILE_WRITE_SIZE);
+  clock_t end = time(NULL);
   fileverify(writef, 0, 0, FILE_WRITE_SIZE);
+  printf("(took %lus)", end - start);
 
   filewrite (writef, 0x7ffa, 0x7ffa, 6);
   fileverify(writef, 0x7ffa, 0x7ffa, 6);

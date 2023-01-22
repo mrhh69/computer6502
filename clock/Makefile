@@ -20,8 +20,10 @@ LD_SCRIPT=../test.ld
 TMP_VBCC_ASM=/tmp/tmp_vbcc_asm.s
 
 VASM_FLAGS=-wdc02 -I"../"
-VCC_FLAGS=-c02 -O=413
-VCA_FLAGS=-wdc02
+VLINK_FLAGS=-Mlisting.txt
+# 1+2+4+8+16+32+128+256
+VCC_FLAGS=-c02 -O=447
+VCA_FLAGS=-wdc02 -opt-branch
 
 SRCS=  $(wildcard *.s)
 VOBJS= $(patsubst %.s,%.vobj,$(SRCS))
@@ -30,7 +32,7 @@ VOBJS+=$(patsubst %.c,%.vobj,$(CSRCS))
 
 
 main.bin:  $(VOBJS) $(RTC_OBJ)
-	$(VLINK) -b rawbin1 -o main.bin  -T $(LD_SCRIPT) $(VOBJS) $(RTC_OBJ)
+	$(VLINK) $(VLINK_FLAGS) -b rawbin1 -o main.bin  -T $(LD_SCRIPT) $(VOBJS) $(RTC_OBJ)
 
 
 %.vobj: %.s
@@ -45,3 +47,5 @@ main.bin:  $(VOBJS) $(RTC_OBJ)
 clean:
 	rm -f *.vobj $(TMP_VBCC_ASM) main.bin
 	make -C $(SPI_DIR) clean
+dump: main.bin
+	cat listing.txt | grep -v ": local abs" | ack --color-match=red --passthru "0x.... [_a-zA-Z0-9]*: global .*"
