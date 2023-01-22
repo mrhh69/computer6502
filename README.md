@@ -8,5 +8,5 @@ The projects are built using [vasm](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
 ```
 *.s  ------------->   ---vasm---> .vobj ---vlink---> .bin (32kb ROM image)
                     ^                   ^
-*.c  ----vbcc----->.s            link.ld
+*.c  ----vbcc-----> .s              link.ld
 ```
