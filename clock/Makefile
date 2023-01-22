@@ -1,15 +1,19 @@
-SPI_DIR=../spi_lib/
-RTC_OBJ=$(SPI_DIR)/rtc.vobj
-RTC_MAKE=rtc.vobj
+I2C_DIR=../i2c_lib/
+LCD_DIR=../lcd_lib/
+RTC_OBJS=$(I2C_DIR)/rtc.vobj $(I2C_DIR)/rtc_libc.vobj
+LCD_OBJS=$(LCD_DIR)/lcd.vobj $(LCD_DIR)/libc.vobj
+RTC_MAKE=#rtc.vobj
+LCD_MAKE=#lcd.vobj
 
 
-all: main.bin
+all: always-submake main.bin
 
 #$(RTC_OBJ):
 #always-submake so that the make is called even when the object is already built,
 #to check for any change in the source files (which can only be done from sub-make)
 always-submake:
-	make -C $(SPI_DIR) $(RTC_MAKE)
+	make -C $(I2C_DIR) $(RTC_MAKE)
+	make -C $(LCD_DIR) $(LCD_MAKE)
 
 
 
@@ -31,8 +35,8 @@ CSRCS= $(wildcard *.c)
 VOBJS+=$(patsubst %.c,%.vobj,$(CSRCS))
 
 
-main.bin:  $(VOBJS) $(RTC_OBJ)
-	$(VLINK) $(VLINK_FLAGS) -b rawbin1 -o main.bin  -T $(LD_SCRIPT) $(VOBJS) $(RTC_OBJ)
+main.bin:  $(VOBJS)# $(RTC_OBJS) $(LCD_OBJS)
+	$(VLINK) $(VLINK_FLAGS) -b rawbin1 -o main.bin  -T $(LD_SCRIPT) $(VOBJS) $(RTC_OBJS) $(LCD_OBJS)
 
 
 %.vobj: %.s
@@ -46,6 +50,7 @@ main.bin:  $(VOBJS) $(RTC_OBJ)
 
 clean:
 	rm -f *.vobj $(TMP_VBCC_ASM) main.bin
-	make -C $(SPI_DIR) clean
+	make -C $(I2C_DIR) clean
+	make -C $(LCD_DIR) clean
 dump: main.bin
 	cat listing.txt | grep -v ": local abs" | ack --color-match=red --passthru "0x.... [_a-zA-Z0-9]*: global .*"
