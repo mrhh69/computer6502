@@ -11,8 +11,6 @@ RTC_ADDR = %1101000
 RTC_WRITE = ((RTC_ADDR<<1)|0)
 RTC_READ  = ((RTC_ADDR<<1)|1)
 
-; NOTE: after some debugging, it turns out read_rtc does indeed hang on first bus failure
-; Maybe do some run throughs in an emulator in read_rtc to fully diagnose problem
 
   include Definitions.s
 
@@ -136,7 +134,7 @@ rtc_read:
 .bad_ack3:
   ;lda #'0'
   ;jsr _putc
-; put RTC back into a stop condition in preparation for a re-try
+; put RTC bus back into a stop condition in preparation for a re-try
   jsr put_stop
   pla
   plx
