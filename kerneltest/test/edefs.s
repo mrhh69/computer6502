@@ -1,6 +1,0 @@
-IFR = $8002
-
-UPDATE = $02
-JAM = $03
-PAUSE = $13
-DISPLAY = $22

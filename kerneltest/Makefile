@@ -3,8 +3,10 @@ VLINK=vlink
 VBCC=vbcc
 
 VASM_FLAGS=-wdc02 -esc -opt-branch -x -nosym -I"../"
-VLINK_FLAGS=-Mlisting.txt
-VLINKER=../test.ld
+VLINK_FLAGS=-T ../test.ld -Mlisting.txt
+TMP_VBCC_ASM=/tmp/tmp_vbcc_asm.s
+VCC_FLAGS=-c02 -O=447
+VCA_FLAGS=-wdc02 -opt-branch
 CRT=ecrt.s
 CSRCS=   test.c kernelc.c
 CSRCOUT= $(patsubst %.c,%.s,$(CSRCS))
@@ -20,14 +22,15 @@ VFLAGS += -dotdir -esc -wdc02
 # TODO: find a way to use shared objects (to link only the routines that are actually used)
 # So, instead I'm going to use vobj
 test.bin: $(VOBJS)
-	$(VLINK) -b rawbin1 -o test.bin  $(VLINK_FLAGS) -T $(VLINKER)   $(VOBJS)
+	$(VLINK) -b rawbin1 -o test.bin  $(VLINK_FLAGS) $(VOBJS)
 # Objects:
 %.vobj: %.s
 	$(VASM) $(VASM_FLAGS) $< -Fvobj -o $@
 # c sources:
-$(CSRCOUT): %.s: %.c
-	$(VBCC) -c02 $< -O=319 -o=$@
-	printf "\n\tinclude cregs.s\n" >> $@
+%.vobj: %.c
+	$(VBCC) $(VCC_FLAGS) $< -o=$(TMP_VBCC_ASM)
+	printf "\n\tinclude ../cregs.s\n" >> $(TMP_VBCC_ASM)
+	$(VASM) $(VCA_FLAGS) $(TMP_VBCC_ASM) -Fvobj -o $@
 
 clean:
 	rm *.vobj test.bin
