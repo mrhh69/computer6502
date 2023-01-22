@@ -58,6 +58,9 @@ _timer2_loop:
   ora ACR
   sta ACR
 
+  lda #'s'
+  jsr print_char
+
 .loop:
 ; set flag to 0
   lda #0
