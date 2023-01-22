@@ -1,4 +1,7 @@
 #include "main.h"
+#include "i2c_lib/rtc.h"
+#include "lcd_lib/lcd.h"
+
 
 #define RTC_DEFAULT_LEN 8
 
@@ -55,8 +58,6 @@ int main() {
   }
 
   lcdins(0x01); // reset lcd
-  lcdins(15);
-  lcdins(69);
 
   /* enter loop */
   timer2_loop();
