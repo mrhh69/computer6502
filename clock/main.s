@@ -20,8 +20,9 @@
 
 ; from clock.c
   extern _update_lcd_clock
-
+; for main.s
   global _timer2_loop
+  global _rtcton
 ; PB6 oscillating at 32768, 4096/32768 = 1/8 hz
 TIMER2_COUNT = 4096
 CURSOR_ON=0
@@ -83,6 +84,30 @@ _timer2_loop:
   ;jsr print_char
 
   bra .loop
+
+; overwrites r0
+; Utility that converts from RTC's format for numbers, to regular int
+_rtcton:
+  tax
+  and #$0f
+  tay
+  txa
+  and #$f0
+  ; (a >> 4) * 10
+  ; (a >> 4) * 0b1010
+  ; (a >> 4) << 3 | (a >> 4) << 1
+  ; (a >> 1) | (a >> 3)
+  lsr
+  sta r0
+  lsr
+  lsr
+  ora r0
+  sta r0
+  tya
+  clc
+  adc r0
+  rts
+
 
 
 interrupt_timer2:

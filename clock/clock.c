@@ -15,10 +15,25 @@ const char rtc_defaults[RTC_DEFAULT_LEN] = {
   0x15, // Minutes
   0x18, // Hours (bit 6 high is 12-hour mode select)
   0x01, // Day of the week?
-  0x15, // Day of the month
+  0x23, // Day of the month
   0x01, // month
   0x23, // year
   0x13, // control register (OUT 0 0 SQWE 0 0 RS1 RS0)
+};
+
+const char* month_names[12] = {
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec"
 };
 
 static char buf[8];
@@ -42,6 +57,21 @@ void update_lcd_clock() {
   putc('0' + ((buf[0] >> 4) & 0x7));
   putc('0' + (buf[0] & 0xf));
   putc(buf[0] & 0x80 ? 'S' : ' ');
+
+  lcdins(0x80 | 0x40); // set cursor start of line 2
+  unsigned char month = rtcton(buf[5]) - 1;//((buf[5] >> 4) * 10) + (buf[5] & 0x0f) - 1;
+  if (month >= 12) {
+    /* invalid month, probably RTC bus failure or smth */
+    return;
+  }
+  else {
+    putc(month_names[month][0]);
+    putc(month_names[month][1]);
+    putc(month_names[month][2]);
+  }
+  putc(' ');
+  if (buf[4] & 0x70) putc('0' + ((buf[4] >> 4) & 0x7));
+  putc('0' + (buf[4] & 0xf));
 }
 
 int main() {
