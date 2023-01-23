@@ -15,8 +15,8 @@ DATA_BASE = 2 ; Number of bits to shift left, to write data
   global print_char
 
   section text
-  
-; cursor flags passed through accumulator
+
+; cursor flags passed through A register
 ; (CURSOR_ON << 1) | CURSOR_BLINK
 initialize_lcd:
 ; RESET SEQUENCE

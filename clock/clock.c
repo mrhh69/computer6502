@@ -18,7 +18,7 @@ const char rtc_defaults[RTC_DEFAULT_LEN] = {
   0x15, // Day of the month
   0x01, // month
   0x23, // year
-  0x10, // control register (OUT 0 0 SQWE 0 0 RS1 RS0)
+  0x13, // control register (OUT 0 0 SQWE 0 0 RS1 RS0)
 };
 
 static char buf[8];

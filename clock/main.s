@@ -24,11 +24,12 @@
   global _timer2_loop
 ; PB6 oscillating at 32768, 4096/32768 = 1/8 hz
 TIMER2_COUNT = 4096
+CURSOR_ON=0
+CURSOR_BLINK=0
 
   section text
 
 pre_init:
-  sei
   lda #$ff
   sta DDRA
   sta DDRB
@@ -41,6 +42,7 @@ pre_init:
   sta ACR
 
   cli
+  lda #(CURSOR_ON<<1)|(CURSOR_BLINK)
   jsr initialize_lcd
 
 ; RTC init
@@ -52,7 +54,7 @@ pre_init:
 ; Enter a timer2 loop (periodically calling update_lcd_clock)
 _timer2_loop:
 ; enable and start timer2
-  lda (INT_EN|INT_T2)
+  lda #(INT_EN|INT_T1|INT_T2) ; FUCK THESE GODDAMN TYPOS (I FORGOT A #)
   sta IER
   lda #(T2_COUNTPB6)
   ora ACR
@@ -77,6 +79,8 @@ _timer2_loop:
   beq .wai_loop
 ; do periodic stuff here:
   jsr _update_lcd_clock
+  ;lda #'p'
+  ;jsr print_char
 
   bra .loop
 
@@ -85,8 +89,6 @@ interrupt_timer2:
 ; set interrupted flag
   lda #1
   sta _timer2_interrupted
-  lda #'2'
-  jsr print_char
 ; reset timer 2
   lda #<TIMER2_COUNT
   sta T2CL

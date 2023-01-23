@@ -29,6 +29,7 @@ STACK_START = $4000
 
   section .text.entry
 reset:
+  sei
   jsr pre_init
 
 
