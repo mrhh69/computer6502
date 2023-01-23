@@ -1,6 +1,7 @@
 # Clock Program TODO
 
 ## Hardware
+  * Solder Battery holder to some wires -> then connect to RTC
   * Left Button
   * Right Button
   * Up Button
@@ -20,8 +21,8 @@
 
 
   * Time/date display "process"
-    - Display day of the week (three-letters)
-    - Show day of the month (two-digits, maybe w/o leading zero?)
+    - ~~Display day of the week (three-letters)~~
+    - ~~Show day of the month, month~~
 
   * New date updater
     - Use Buttons
