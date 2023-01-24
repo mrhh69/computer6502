@@ -18,15 +18,19 @@
   global interrupt_timer2
   global button_press
 
-; from clock.c
-  extern _update_lcd_clock
 ; for main.s
   global _timer2_loop
   global _rtcton
-; PB6 oscillating at 32768, 4096/32768 = 1/8 hz
-TIMER2_COUNT = 4096
+; from runner.c
+  extern _do_periodic
+  extern _mode
+
+; PB6 oscillating at 32768
+TIMER2_COUNT = 32768/8
 CURSOR_ON=0
 CURSOR_BLINK=0
+
+NUM_MODES=2
 
   section text
 
@@ -55,14 +59,16 @@ pre_init:
 ; Enter a timer2 loop (periodically calling update_lcd_clock)
 _timer2_loop:
 ; enable and start timer2
-  lda #(INT_EN|INT_T1|INT_T2) ; FUCK THESE GODDAMN TYPOS (I FORGOT A #)
-  sta IER
   lda #(T2_COUNTPB6)
   ora ACR
   sta ACR
+  lda #(CA1_POS)
+  sta PCR
+  lda #(INT_EN|INT_T1|INT_T2|INT_CA1) ; FUCK THESE GODDAMN TYPOS (I FORGOT A #)
+  sta IER
 
-  lda #'s'
-  jsr print_char
+  ;lda #'s'
+  ;jsr print_char
 
 .loop:
 ; set flag to 0
@@ -78,15 +84,24 @@ _timer2_loop:
 ; wait for interrupted flag to be set
   lda _timer2_interrupted
   beq .wai_loop
+  sei
 ; do periodic stuff here:
-  jsr _update_lcd_clock
-  ;lda #'p'
-  ;jsr print_char
+; show current mode
+  lda #($80|15)
+  jsr lcd_instruction
+  lda _mode
+  clc
+  adc #'0'
+  jsr print_char
 
+  jsr _do_periodic
+
+  cli
   bra .loop
 
-; overwrites r0
+; overwrites r0 (TODO: make sure that is correct int the vbcc ABI standard)
 ; Utility that converts from RTC's format for numbers, to regular int
+; I wrote this and it worked first try (im just that good)
 _rtcton:
   tax
   and #$0f
@@ -123,6 +138,13 @@ interrupt_timer2:
 interrupt_timer1:
   rts
 button_press:
+  lda _mode
+  inc
+  cmp #NUM_MODES
+  bne .nonz
+  lda #0
+.nonz:
+  sta _mode
   rts
 
   section bss
