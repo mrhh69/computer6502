@@ -14,14 +14,11 @@ static const char rtc_defaults[RTC_DEFAULT_LEN];
 static const char month_names[12][4];
 static const char dotw_names[12][4];
 
-static char buf[8];
+char buf[8];
 
 
-void clock_lcd_periodic() {
+void clock_lcd_print() {
   unsigned char ind;
-  /* rtc_read into a buffer */
-  rtc_read(buf, 7, 0);
-  /* print data onto lcd using putc and lcdins */
   /* NOTE:
    * not LCD reset, because quickly clearing and
    * setting the LCD screen causes wierd visual effects)
@@ -57,6 +54,13 @@ void clock_lcd_periodic() {
   putc('0' + (buf[4] & 0xf));
 }
 
+void clock_lcd_periodic() {
+  /* rtc_read into a buffer */
+  rtc_read(buf, 7, 0);
+  /* print data onto lcd using putc and lcdins */
+  clock_lcd_print();
+}
+
 int main() {
   /* first, rtc_read to make sure clock is running */
   rtc_read(buf, 8, 0);
@@ -83,10 +87,10 @@ static const char rtc_defaults[RTC_DEFAULT_LEN] = {
    * So, 0x15 == 1 and 5 (or 15 decimal)
    */
   0x00, // Seconds (top bit is CH, clock halt)
-  0x44, // Minutes
-  0x23, // Hours (bit 6 high is 12-hour mode select)
+  0x00, // Minutes
+  0x22, // Hours (bit 6 high is 12-hour mode select)
   0x01, // Day of the week?
-  0x21, // Day of the month
+  0x23, // Day of the month
   0x01, // month
   0x23, // year
   0x13, // control register (OUT 0 0 SQWE 0 0 RS1 RS0)

@@ -16,9 +16,11 @@
     - ~~Use mode select~~
       * ~~to change running "processes"~~
       * to change interrupt handlers?
+      * init functions
       * Debounce
-    - Find a way to get interrupts from all buttons?
-    - Or just poll them (might be better for debouncing, too)
+    - Use U/D/L/R buttons
+      * Get interrupts?
+      * Or just poll them (might be better for debouncing, too)
 
 
   * Time/date display "process"
@@ -30,6 +32,7 @@
       * Up/Down (++/--), hold for repeat inc/dec
       * Left/Right (field select)
     - ~~Blink effect to show currently selected field~~
+    - Add init function
 
   * New LCD backlight manager
     - Writes to LCD Backlight control
