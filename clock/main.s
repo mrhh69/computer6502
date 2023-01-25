@@ -13,13 +13,17 @@
 ; NOTE:
 ; crt.s Includes the .text.entry and .text.vectors for us
 ; All we need to define here are
+; ANOTHER NOTE:
+; _main does not HAVE to be a C function, as long as it
+; adheres to the abi, it is a valid C function
+; (in this case _main is in assembly)
   global pre_init         ; called before anything
+  global _main            ; Called after C initialization
   global interrupt_timer1 ; interrupts
   global interrupt_timer2
   global button_press
 
-; for main.s
-  global _timer2_loop
+; for main.c
   global _rtcton
 ; from runner.c
   extern _do_init
@@ -57,8 +61,8 @@ pre_init:
   rts
 
 
-; Enter a timer2 loop (periodically calling update_lcd_clock)
-_timer2_loop:
+; Enter the main timer2 loop
+_main:
 ; enable and start timer2
   lda #(T2_COUNTPB6)
   ora ACR

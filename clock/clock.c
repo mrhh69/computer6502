@@ -76,14 +76,6 @@ void clock_lcd_init() {
   lcdins(0x01); // reset lcd
 }
 
-int main() {
-  //clock_lcd_init();
-  lcdins(0x01);
-  putc('s');
-  /* enter loop */
-  timer2_loop();
-}
-
 
 static const char rtc_defaults[RTC_DEFAULT_LEN] = {
   /* NOTE: these numbers are in the format of 0b0hhhllll

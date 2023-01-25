@@ -13,7 +13,6 @@
     - Debounce MS
     - Use current mode
       * to change interrupt handlers
-      * init functions
     - Use U/D/L/R buttons
       * Store state of buttons
       * On interrupt (from interrupt logic), update state & set flag
@@ -26,7 +25,6 @@
     - Use Buttons
       * Up/Down (++/--), hold for repeat inc/dec
       * Left/Right (field select)
-    - Add init function
 
   * New LCD backlight manager
     - Writes to LCD Backlight control
