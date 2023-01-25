@@ -61,7 +61,7 @@ void clock_lcd_periodic() {
   clock_lcd_print();
 }
 
-int main() {
+void clock_lcd_init() {
   /* first, rtc_read to make sure clock is running */
   rtc_read(buf, 8, 0);
   if (buf[0] & 0x80) {
@@ -74,7 +74,12 @@ int main() {
   }
 
   lcdins(0x01); // reset lcd
+}
 
+int main() {
+  //clock_lcd_init();
+  lcdins(0x01);
+  putc('s');
   /* enter loop */
   timer2_loop();
 }

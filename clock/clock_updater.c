@@ -1,15 +1,16 @@
 #include "lcd_lib/lcd.h"
 #include "i2c_lib/rtc.h"
 #include "clock.h"
+#include "clock_updater.h"
 
 #define COUNTS 4
 // 0xff -> block of black
 #define BLANKING_CHAR ' ' // character that blinks current field
 
-volatile unsigned char counts;
+static volatile unsigned char counts;
 // field = (field + 1) % (NUM_FIELDS + 1)
-volatile unsigned char field = 2; // NUM_FIELDS -> no field
-volatile unsigned char field_val;
+static volatile unsigned char field = 2; // NUM_FIELDS -> no field
+static volatile unsigned char field_val;
 
 #define NUM_FIELDS 6
 
@@ -55,4 +56,10 @@ void clock_updater_periodic() {
       putc(BLANKING_CHAR);
     }
   }
+}
+
+void clock_updater_init() {
+  if (field >= NUM_FIELDS) return;
+  rtc_read(buf, 1, fields[field].rtc);
+  field_val = buf[0];
 }

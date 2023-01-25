@@ -1,37 +1,31 @@
 # Clock Program TODO
 
 ## Hardware
-  * ~~Solder Battery holder to some wires -> then connect to RTC~~
-  * ~~Left Button~~
-  * ~~Right Button~~
-  * ~~Up Button~~
-  * ~~Down Button~~
-  * ~~Mode Select Button~~
+  * **Button interrupt logic**
+  * **Wire RTC pins**
+
   * LCD Backlight control
     - One transistor (on/off)
     - OR: two transistors feeding a resistor DAC
 
 ## Software
   * Main Loop
-    - ~~Use mode select~~
-      * ~~to change running "processes"~~
-      * to change interrupt handlers?
+    - Debounce MS
+    - Use current mode
+      * to change interrupt handlers
       * init functions
-      * Debounce
     - Use U/D/L/R buttons
-      * Get interrupts?
-      * Or just poll them (might be better for debouncing, too)
+      * Store state of buttons
+      * On interrupt (from interrupt logic), update state & set flag
+      * Next time through main loop, run interrupt handlers
 
 
-  * Time/date display "process"
-    - ~~Display day of the week (three-letters)~~
-    - ~~Show day of the month, month~~
+  * ~~Clock display~~
 
-  * New date updater
+  * Clock updater
     - Use Buttons
       * Up/Down (++/--), hold for repeat inc/dec
       * Left/Right (field select)
-    - ~~Blink effect to show currently selected field~~
     - Add init function
 
   * New LCD backlight manager

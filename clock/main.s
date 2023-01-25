@@ -22,6 +22,7 @@
   global _timer2_loop
   global _rtcton
 ; from runner.c
+  extern _do_init
   extern _do_periodic
   extern _mode
 
@@ -94,6 +95,12 @@ _timer2_loop:
   adc #'0'
   jsr print_char
 
+  lda _new_mode
+  beq .not_new
+  jsr _do_init
+  lda #0
+  sta _new_mode
+.not_new:
   jsr _do_periodic
 
   cli
@@ -145,7 +152,14 @@ button_press:
   lda #0
 .nonz:
   sta _mode
+  lda #1
+  sta _new_mode
   rts
 
   section bss
+; flag set after timer2 interrupt
 _timer2_interrupted: reserve 1
+  section data
+; flag set for new mode entered
+; cleared when init for new mode has been called
+_new_mode: byte $01
