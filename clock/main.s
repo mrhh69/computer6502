@@ -75,6 +75,8 @@ _main:
   ;lda #'s'
   ;jsr print_char
 
+  jsr _do_init ; intial init
+
 .loop:
 ; set flag to 0
   lda #0
@@ -91,6 +93,27 @@ _main:
   beq .wai_loop
   sei
 ; do periodic stuff here:
+
+; check (and update) button states
+; the fact that this is done every 1/8 seconds is good for debouncing
+  lda _mode_select_edge
+  beq .not_new
+; mode select pressed
+  lda #0
+  sta _mode_select_edge
+; next mode (mode = (mode + 1 == NUM_MODES) ? 0 : mode + 1)
+  lda _mode
+  inc
+  cmp #NUM_MODES
+  bne .nonz
+  lda #0
+.nonz:
+  sta _mode
+; do init on new mode
+  jsr _do_init
+.not_new:
+
+; mode has been updated, do periodic
 ; show current mode
   lda #($80|15)
   jsr lcd_instruction
@@ -99,12 +122,7 @@ _main:
   adc #'0'
   jsr print_char
 
-  lda _new_mode
-  beq .not_new
-  jsr _do_init
-  lda #0
-  sta _new_mode
-.not_new:
+
   jsr _do_periodic
 
   cli
@@ -149,21 +167,12 @@ interrupt_timer2:
 interrupt_timer1:
   rts
 button_press:
-  lda _mode
-  inc
-  cmp #NUM_MODES
-  bne .nonz
-  lda #0
-.nonz:
-  sta _mode
   lda #1
-  sta _new_mode
+  sta _mode_select_edge
   rts
 
   section bss
 ; flag set after timer2 interrupt
 _timer2_interrupted: reserve 1
-  section data
-; flag set for new mode entered
-; cleared when init for new mode has been called
-_new_mode: byte $01
+; flag set after ca1 interrupt (positive edge)
+_mode_select_edge: reserve 1
