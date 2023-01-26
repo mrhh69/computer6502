@@ -1,8 +1,8 @@
 # Clock Program TODO
 
 ## Hardware
-  * **Button interrupt logic**
-  * **Wire RTC pins**
+  * ~~**Button interrupt logic**~~
+  * ~~**Wire RTC pins**~~
 
   * LCD Backlight control
     - One transistor (on/off)
@@ -10,9 +10,13 @@
 
 ## Software
   * Main Loop
-    - Debounce MS
+    - ~~Debounce MS~~ (still need to debounce negative edges)
     - Use current mode
       * to change interrupt handlers
+    - Add a background_period function to each mode?
+      * For alarm update checks and stuff
+      * As well as LCD backlight manager
+      * And timer
     - Use U/D/L/R buttons
       * Store state of buttons
       * On interrupt (from interrupt logic), update state & set flag
@@ -32,7 +36,7 @@
       * Shutdown backlight after some time of inactivity?
     - Handlers for every button, to detect inactivity
 
-  * New alarm manager
+  * Alarm manager
     - Alarm consist of hours:minutes
     - Store current alarm in unused RTC memory (persists afer power-off)
     - Blink LED on alarm done

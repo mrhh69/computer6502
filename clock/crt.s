@@ -25,7 +25,8 @@ STACK_START = $4000
   extern pre_init
   extern interrupt_timer1
   extern interrupt_timer2
-  extern button_press ; interrupt CA1
+  extern interrupt_ca1
+  extern interrupt_cb1
 
   section .text.entry
 reset:
@@ -115,6 +116,8 @@ irq:
   bne .irq_timer2
   bit #INT_CA1
   bne .irq_ca1
+  bit #INT_CB1
+  bne .irq_cb1
   ; Should not happen hopefully:
   lda #$aa
   sta PORTA
@@ -124,17 +127,22 @@ irq:
   lda #INT_T1 ; Clear Interrupt flag
   sta IFR
   jsr interrupt_timer1
-  jmp .irq_out
+  bra .irq_out
 .irq_timer2:
   lda #INT_T2
   sta IFR
   jsr interrupt_timer2
-  jmp .irq_out
+  bra .irq_out
 .irq_ca1: ; CA1 Interrupt
   lda #INT_CA1 ; Clear Flag
   sta IFR
-  jsr button_press ; external subroutine
-  jmp .irq_out
+  jsr interrupt_ca1
+  bra .irq_out
+.irq_cb1:
+  lda #INT_CB1
+  sta IFR
+  jsr interrupt_cb1
+  bra .irq_out
 
 .irq_out:
   pla

@@ -21,7 +21,8 @@
   global _main            ; Called after C initialization
   global interrupt_timer1 ; interrupts
   global interrupt_timer2
-  global button_press
+  global interrupt_ca1
+  global interrupt_cb1
 
 ; for main.c
   global _rtcton
@@ -67,15 +68,13 @@ _main:
   lda #(T2_COUNTPB6)
   ora ACR
   sta ACR
-  lda #(CA1_POS)
+  lda #(CA1_POS|CB1_POS)
   sta PCR
-  lda #(INT_EN|INT_T1|INT_T2|INT_CA1) ; FUCK THESE GODDAMN TYPOS (I FORGOT A #)
+  lda #(INT_EN|INT_T1|INT_T2|INT_CA1|INT_CB1)
   sta IER
 
-  ;lda #'s'
-  ;jsr print_char
 
-  jsr _do_init ; intial init
+  jsr _do_init ; intial mode init
 
 .loop:
 ; set flag to 0
@@ -96,7 +95,7 @@ _main:
 
 ; check (and update) button states
 ; the fact that this is done every 1/8 seconds is good for debouncing
-  lda _mode_select_edge
+  lda _mode_select_edge ; check MS button
   beq .not_new
 ; mode select pressed
   lda #0
@@ -166,9 +165,13 @@ interrupt_timer2:
   rts
 interrupt_timer1:
   rts
-button_press:
+interrupt_ca1:
   lda #1
   sta _mode_select_edge
+  rts
+interrupt_cb1:
+  lda #1
+  sta _button_edge
   rts
 
   section bss
@@ -176,3 +179,4 @@ button_press:
 _timer2_interrupted: reserve 1
 ; flag set after ca1 interrupt (positive edge)
 _mode_select_edge: reserve 1
+_button_edge: reserve 1
