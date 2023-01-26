@@ -26,9 +26,12 @@
 
 ; for main.c
   global _rtcton
+  global _button_states
+  global _prev_states
 ; from runner.c
   extern _do_init
   extern _do_periodic
+  extern _do_button_press
   extern _mode
 
 ; PB6 oscillating at 32768
@@ -38,12 +41,18 @@ CURSOR_BLINK=0
 
 NUM_MODES=2
 
+BUTTON_CLR=%01000000; PORTA
+
   section text
 
 pre_init:
-  lda #$ff
+  lda #%11000011
   sta DDRA
+  lda #$ff
   sta DDRB
+  lda #0
+  sta PORTA
+  sta PORTB
 
   lda #(~INT_EN & $ff)
   sta IER
@@ -64,7 +73,14 @@ pre_init:
 
 ; Enter the main timer2 loop
 _main:
+; clear button states:
+  lda PORTA
+  ora #BUTTON_CLR
+  sta PORTA
+  eor #BUTTON_CLR
+  sta PORTA
 ; enable and start timer2
+; enable button interrupts
   lda #(T2_COUNTPB6)
   ora ACR
   sta ACR
@@ -112,6 +128,26 @@ _main:
   jsr _do_init
 .not_new:
 
+  lda _button_edge ; UDLR buttons
+  beq .no_button_edge
+; clear interrupt
+  lda PORTA
+  ora #BUTTON_CLR
+  sta PORTA
+  eor #BUTTON_CLR
+  sta PORTA
+; read and store new states:
+  lda _button_states
+  sta _prev_states
+  lda PORTA
+  and #(%1111 << 2)
+  lsr
+  lsr
+  sta _button_states
+
+  jsr _do_button_press
+.no_button_edge:
+
 ; mode has been updated, do periodic
 ; show current mode
   lda #($80|15)
@@ -150,7 +186,10 @@ _rtcton:
   clc
   adc r0
   rts
-
+; TODO: maybe idk
+;_ntortc:
+  ; bottom = a % 10
+  ; top = a / 10
 
 
 interrupt_timer2:
@@ -180,3 +219,5 @@ _timer2_interrupted: reserve 1
 ; flag set after ca1 interrupt (positive edge)
 _mode_select_edge: reserve 1
 _button_edge: reserve 1
+_button_states: reserve 1
+_prev_states: reserve 1

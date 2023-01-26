@@ -4,5 +4,6 @@
 
 void clock_updater_init();
 void clock_updater_periodic();
+void clock_updater_button();
 
 #endif

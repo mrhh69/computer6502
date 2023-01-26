@@ -163,7 +163,10 @@ put_stop:
 ; A returns byte
 ; Y register destroyed, X register destroyed
 get_byte:
-  lda #SCL
+  ;lda #SCL
+  lda DDRA  ; keep original ddra
+  and #~SDA
+  ora #SCL
   sta DDRA
   lda #0
   ldy #8
@@ -179,8 +182,11 @@ get_byte:
 .notone:
   dey
   bne .loopy
-  ldy #(SCL | SDA)
-  sty DDRA
+  tay
+  lda DDRA
+  ora #(SCL | SDA)
+  sta DDRA
+  tya
   rts
 
 
@@ -201,10 +207,13 @@ put_byte:
 
 ; returns ack into A register
 get_ack:
-  lda #SCL
+  lda DDRA
+  and #~SDA
+  ora #SCL
   sta DDRA
   jsr get_bit
-  lda #(SCL | SDA)
+  lda DDRA
+  ora #(SCL | SDA)
   sta DDRA
   txa
   rts

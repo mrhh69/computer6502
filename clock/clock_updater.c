@@ -1,3 +1,4 @@
+#include "main.h"
 #include "lcd_lib/lcd.h"
 #include "i2c_lib/rtc.h"
 #include "clock.h"
@@ -18,7 +19,7 @@ static const struct field {
   unsigned char rtc; // mem pos in rtc
   unsigned char pos; // pos on lcd (when printed)
   unsigned char len; // len on lcd (when printed)
-  unsigned char pad;
+  unsigned char max_val;
 } fields[NUM_FIELDS] = {
   {2,      0, 2}, // hours
   {1,      3, 2}, // minutes
@@ -58,8 +59,34 @@ void clock_updater_periodic() {
   }
 }
 
-void clock_updater_init() {
+static void field_init() {
   if (field >= NUM_FIELDS) return;
   rtc_read(buf, 1, fields[field].rtc);
   field_val = buf[0];
+}
+
+void clock_updater_button() {
+  unsigned char pressed_buttons = (prev_states ^ button_states) & button_states;
+  //if (pressed_buttons & BUTTON_UP)    {field_val++;}
+  //if (pressed_buttons & BUTTON_DOWN)  {field_val--;}
+  if (pressed_buttons & BUTTON_LEFT)  {
+    field--;
+    if(field > NUM_FIELDS) field=NUM_FIELDS;
+    goto new_field;
+  }
+  if (pressed_buttons & BUTTON_RIGHT) {
+    field++;
+    if(field > NUM_FIELDS) field=0;
+    goto new_field;
+  }
+  
+  return;
+
+new_field:
+  field_init();
+}
+
+
+void clock_updater_init() {
+  field_init();
 }

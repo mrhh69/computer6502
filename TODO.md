@@ -2,7 +2,6 @@
 
 ## Hardware
   * ~~**Button interrupt logic**~~
-  * ~~**Wire RTC pins**~~
 
   * LCD Backlight control
     - One transistor (on/off)
@@ -17,10 +16,10 @@
       * For alarm update checks and stuff
       * As well as LCD backlight manager
       * And timer
-    - Use U/D/L/R buttons
-      * Store state of buttons
-      * On interrupt (from interrupt logic), update state & set flag
-      * Next time through main loop, run interrupt handlers
+    - ~~Use U/D/L/R buttons~~
+      * ~~Store state of buttons~~
+      * ~~On interrupt (from interrupt logic), update state & set flag~~
+      * ~~Next time through main loop, run interrupt handlers~~
 
 
   * ~~Clock display~~
@@ -28,7 +27,7 @@
   * Clock updater
     - Use Buttons
       * Up/Down (++/--), hold for repeat inc/dec
-      * Left/Right (field select)
+      * ~~Left/Right (field select)~~
 
   * New LCD backlight manager
     - Writes to LCD Backlight control
