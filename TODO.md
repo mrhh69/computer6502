@@ -1,18 +1,20 @@
 # Clock Program TODO
 
 ## Hardware
-  * ~~**Button interrupt logic**~~
-
   * LCD Backlight control
     - One transistor (on/off)
     - OR: two transistors feeding a resistor DAC
+  * Better button interrupt logic (with exor chips + d latch chips)
+    - not important, doesn't change the logic, just the chip overhead
 
 ## Software
   * Main Loop
-    - ~~Debounce MS~~ (still need to debounce negative edges)
-    - Use current mode
-      * to change interrupt handlers
-    - Add a background_period function to each mode?
+    - **Investigate why rtc_write is locking the processor** (same thing that happened with rtc_read)
+    - Have two parts of the main loop
+      * One, that runs more frequently (64hz) and updates button states
+      * Other, that runs periodic clock program code (8hz or less)
+    - Debounce MS negative edges
+    - Add a background_periodic function to each mode?
       * For alarm update checks and stuff
       * As well as LCD backlight manager
       * And timer
@@ -25,9 +27,8 @@
   * ~~Clock display~~
 
   * Clock updater
-    - Use Buttons
-      * Up/Down (++/--), hold for repeat inc/dec
-      * ~~Left/Right (field select)~~
+    - ~~Use Buttons~~
+    - Maybe set Clock Halt on init
 
   * New LCD backlight manager
     - Writes to LCD Backlight control

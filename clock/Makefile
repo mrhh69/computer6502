@@ -53,4 +53,7 @@ clean:
 	make -C $(I2C_DIR) clean
 	make -C $(LCD_DIR) clean
 dump: main.bin
-	cat listing.txt | grep -v ": local abs" | ack --color-match=red --passthru "0x.... [_a-zA-Z0-9]*: global .*"
+	cat listing.txt \
+	| grep -v ": local abs" \
+	| grep -v ": local reloc" \
+	| ack --color-match=red --passthru "0x.... [_a-zA-Z0-9]*: global .*"

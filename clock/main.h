@@ -14,5 +14,6 @@ extern volatile unsigned char prev_states;
 
 extern void timer2_loop();
 extern __reg("a") unsigned char rtcton(__reg("a") unsigned char r);
+extern __reg("a") unsigned char ntortc(__reg("r0") unsigned char n);
 
 #endif
