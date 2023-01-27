@@ -35,10 +35,15 @@
   extern _do_button_press
   extern _mode
 
-; PB6 oscillating at 32768
-TIMER2_COUNT = 32768/8
+; PB6 (->timer2) oscillating at 32768
+; ticks for each loop
+; (buttons updated, handlers called, tick incremented)
+TIMER2_COUNT = (32768/64)
 CURSOR_ON=0
 CURSOR_BLINK=0
+
+; ticks of timer2 runouts until periodic functions are run
+PERIODIC_TICKS = 8
 
 NUM_MODES=2
 
@@ -73,6 +78,9 @@ pre_init:
 
 
 ; Enter the main timer2 loop
+; There are actually two loops happening here
+; -> one, that updates button every timer2 runout
+; -> two, that runs periodic code every PERIODIC_TICKS ticks
 _main:
 ; clear button states:
   lda PORTA
@@ -102,15 +110,47 @@ _main:
   sta T2CL
   lda #>TIMER2_COUNT
   sta T2CH
+
+; ----timer2 loop----
 .wai_loop:
   wai
 ; wait for interrupted flag to be set
   lda _timer2_interrupted
   beq .wai_loop
   sei
-; do periodic stuff here:
+; ----do periodic stuff here----
+
+  jsr update_buttons
+
+; check ticks
+  inc _ticks
+  lda #(PERIODIC_TICKS-1)
+  cmp _ticks
+  bne .no_periodic
+  lda #0
+  sta _ticks
+
+; do ticks periodic stuff (do_periodic)
+; show current mode
+  lda #($80|15)
+  jsr lcd_instruction
+  lda _mode
+  clc
+  adc #'0'
+  jsr print_char
+
+
+  jsr _do_periodic
+.no_periodic:
+
+; ----end periodic stuff----
+  cli
+  bra .loop
+
+
 
 ; check (and update) button states
+update_buttons:
 ; the fact that this is done every 1/8 seconds is good for debouncing
   lda _mode_select_edge ; check MS button
   beq .not_new
@@ -148,21 +188,9 @@ _main:
 
   jsr _do_button_press
 .no_button_edge:
-
-; mode has been updated, do periodic
-; show current mode
-  lda #($80|15)
-  jsr lcd_instruction
-  lda _mode
-  clc
-  adc #'0'
-  jsr print_char
+  rts
 
 
-  jsr _do_periodic
-
-  cli
-  bra .loop
 
 
 ; overwrites r0 (TODO: make sure that is correct int the vbcc ABI standard)
@@ -258,6 +286,8 @@ interrupt_cb1:
   section bss
 ; flag set after timer2 interrupt
 _timer2_interrupted: reserve 1
+; number of timer2 interrupts
+_ticks: reserve 1
 ; flag set after ca1 interrupt (positive edge)
 _mode_select_edge: reserve 1
 _button_edge: reserve 1

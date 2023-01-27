@@ -9,19 +9,17 @@
 
 ## Software
   * Main Loop
-    - **Investigate why rtc_write is locking the processor** (same thing that happened with rtc_read)
-    - Have two parts of the main loop
-      * One, that runs more frequently (64hz) and updates button states
-      * Other, that runs periodic clock program code (8hz or less)
+    - **Investigate why rtc_write is locking the processor**
+      * (same thing that happened with rtc_read earlier)
+    - ~~Have two parts of the main loop~~
     - Debounce MS negative edges
+      * store current state of MS
+      * -> swap between interrupt on pos/neg edge every interrupt
     - Add a background_periodic function to each mode?
       * For alarm update checks and stuff
       * As well as LCD backlight manager
       * And timer
     - ~~Use U/D/L/R buttons~~
-      * ~~Store state of buttons~~
-      * ~~On interrupt (from interrupt logic), update state & set flag~~
-      * ~~Next time through main loop, run interrupt handlers~~
 
 
   * ~~Clock display~~
@@ -29,6 +27,8 @@
   * Clock updater
     - ~~Use Buttons~~
     - Maybe set Clock Halt on init
+      * and make sure to unset it on de-init,
+        -> otherwise clock.c will re-write defaults onto the rtc
 
   * New LCD backlight manager
     - Writes to LCD Backlight control
