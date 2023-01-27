@@ -66,6 +66,8 @@ rtc_write:
   dex
   bne .loopx
   jsr put_stop
+  pla    ; de-preseve stack
+  plx
   rts
 
 .bad_ack3:
