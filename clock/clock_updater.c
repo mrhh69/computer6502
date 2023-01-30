@@ -42,7 +42,7 @@ void clock_updater_periodic() {
     if (buf[field_b] != ntortc(field_val)) {
       /* update, and push changes to RTC */
       buf[field_b] = ntortc(field_val);
-      //rtc_write(&buf[field_b], 1, field_b);
+      rtc_write(&buf[field_b], 1, field_b);
     }
   }
 
@@ -104,10 +104,12 @@ field_change:
 new_field:
   if (field > NUM_FIELDS) field = set;
   field_init();
+  counts = 0; // reset when changing fields
   return;
 }
 
 
 void clock_updater_init() {
   field_init();
+  lcdins(0x01);
 }

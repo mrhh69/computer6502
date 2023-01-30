@@ -51,12 +51,18 @@ BUTTON_CLR=%01000000; PORTA
 
 pre_init:
   lda #%11000011
-  sta DDRA
+  sta VIA1_DDRA
+  lda #$00
+  sta VIA1_DDRB
   lda #$ff
-  sta DDRB
+  sta VIA2_DDRA
+  sta VIA2_DDRB
+
   lda #0
-  sta PORTA
-  sta PORTB
+  sta VIA1_PORTA
+  sta VIA1_PORTB
+  sta VIA2_PORTA
+  sta VIA2_PORTB
 
   lda #(~INT_EN & $ff)
   sta IER
@@ -81,11 +87,11 @@ pre_init:
 ; -> two, that runs periodic code every PERIODIC_TICKS ticks
 _main:
 ; clear button states:
-  lda PORTA
+  lda BUTTON_PORT
   ora #BUTTON_CLR
-  sta PORTA
+  sta BUTTON_PORT
   eor #BUTTON_CLR
-  sta PORTA
+  sta BUTTON_PORT
 ; enable and start timer2
 ; enable button interrupts
   lda #(T2_COUNTPB6)
@@ -95,7 +101,6 @@ _main:
   sta PCR
   lda #(INT_EN|INT_T1|INT_T2|INT_CA1|INT_CB1)
   sta IER
-
 
   jsr _do_init ; intial mode init
 
@@ -138,7 +143,9 @@ _main:
   jsr print_char
 
 
+  cli
   jsr _do_periodic
+  sei
 .no_periodic:
 
 ; ----end periodic stuff----
@@ -164,27 +171,31 @@ update_buttons:
 .nonz:
   sta _mode
 ; do init on new mode
+  cli
   jsr _do_init
+  sei
 .not_new:
 
   lda _button_edge ; UDLR buttons
   beq .no_button_edge
 ; clear interrupt
-  lda PORTA
+  lda BUTTON_PORT
   ora #BUTTON_CLR
-  sta PORTA
+  sta BUTTON_PORT
   eor #BUTTON_CLR
-  sta PORTA
+  sta BUTTON_PORT
 ; read and store new states:
   lda _button_states
   sta _prev_states
-  lda PORTA
+  lda BUTTON_PORT
   and #(%1111 << 2)
   lsr
   lsr
   sta _button_states
 
+  cli
   jsr _do_button_press
+  sei
 .no_button_edge:
   rts
 
@@ -206,7 +217,21 @@ interrupt_timer1:
 interrupt_ca1:
   lda #1
   sta _mode_select_edge
-  rts
+;  lda _mode_select_val
+;  eor #1
+;  sta _mode_select_val
+;  and #1
+;  beq .trans_neg
+;.trans_pos:
+;  lda PCR
+;  ora #(CA1_POS)
+;  sta PCR
+;  rts
+;.trans_neg:
+;  lda PCR
+;  and #(~CA1_POS)
+;  sta PCR
+;  rts
 interrupt_cb1:
   lda #1
   sta _button_edge
@@ -221,6 +246,7 @@ _timer2_interrupted: reserve 1
 _ticks: reserve 1
 ; flag set after ca1 interrupt (positive edge)
 _mode_select_edge: reserve 1
+;_mode_select_val: reserve 1
 _button_edge: reserve 1
 _button_states: reserve 1
 _prev_states: reserve 1

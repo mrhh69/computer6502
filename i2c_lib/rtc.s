@@ -1,5 +1,5 @@
 
-; PORTA:
+; RTC_PORT:
 SCL = %01
 SDA = %10
 
@@ -25,7 +25,7 @@ RTC_READ  = ((RTC_ADDR<<1)|1)
 rtc_init:
 ; Setup idle state:
   lda #(SDA | SCL)
-  sta PORTA
+  sta RTC_PORT
   WAIT_US 10000
   rts
 
@@ -147,29 +147,29 @@ rtc_read:
 ; RTC calls:
 put_start:
   lda #SCL
-  sta PORTA
+  sta RTC_PORT
   jsr rtcdelay;WAIT_US START_DELAY_US ;(start hold)
   lda #0
-  sta PORTA
+  sta RTC_PORT
   jsr rtcdelay ; (start hold)
   rts
 put_stop:
   jsr wait_low
   lda #SCL
-  sta PORTA
+  sta RTC_PORT
   jsr rtcdelay;WAIT_US STOP_DELAY_US
   lda #(SCL|SDA)
-  sta PORTA
+  sta RTC_PORT
   rts
 
 ; A returns byte
 ; Y register destroyed, X register destroyed
 get_byte:
   ;lda #SCL
-  lda DDRA  ; keep original ddra
+  lda RTC_DDR  ; keep original ddra
   and #~SDA
   ora #SCL
-  sta DDRA
+  sta RTC_DDR
   lda #0
   ldy #8
 .loopy:
@@ -185,9 +185,9 @@ get_byte:
   dey
   bne .loopy
   tay
-  lda DDRA
+  lda RTC_DDR
   ora #(SCL | SDA)
-  sta DDRA
+  sta RTC_DDR
   tya
   rts
 
@@ -209,14 +209,14 @@ put_byte:
 
 ; returns ack into A register
 get_ack:
-  lda DDRA
+  lda RTC_DDR
   and #~SDA
   ora #SCL
-  sta DDRA
+  sta RTC_DDR
   jsr get_bit
-  lda DDRA
+  lda RTC_DDR
   ora #(SCL | SDA)
-  sta DDRA
+  sta RTC_DDR
   txa
   rts
 ; if BE, then writes  0, else 1
@@ -229,22 +229,22 @@ put_bit:
 .notone:
   lda #0
 .clockup:
-  sta PORTA
+  sta RTC_PORT
   jsr wait_low ; NOTE: waitus macro protects all registers
   ora #SCL
-  sta PORTA
+  sta RTC_PORT
   jsr wait_high
   eor #SCL
-  sta PORTA
+  sta RTC_PORT
   rts
 ; Assumes SCL = 0 SDA = configured for input
 ; Returns into X register
 get_bit:
   jsr wait_low
   lda #SCL
-  sta PORTA
+  sta RTC_PORT
   jsr wait_high
-  lda PORTA
+  lda RTC_PORT
   and #SDA
   beq .notone
   ldx #1
@@ -253,7 +253,7 @@ get_bit:
   ldx #0
 .isone:
   lda #0
-  sta PORTA
+  sta RTC_PORT
   rts
 
 

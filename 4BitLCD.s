@@ -1,4 +1,7 @@
 
+
+  ;include Definitions.s
+
 E =  %10000000
 RW = %00000010
 RS = %00000001
@@ -17,40 +20,40 @@ initialize_lcd:
   WAIT_US (50000) ; More than 40 ms
 
   lda #(%0011 << DATA_BASE)
-  sta PORTB
+  sta LCD_PORT
   ora #E
-  sta PORTB
+  sta LCD_PORT
   eor #E
-  sta PORTB
+  sta LCD_PORT
 
   WAIT_US (5000) ; More than 4.1 ms
 
   lda #(%0011 << DATA_BASE)
-  sta PORTB
+  sta LCD_PORT
   ora #E
-  sta PORTB
+  sta LCD_PORT
   eor #E
-  sta PORTB
+  sta LCD_PORT
 
   WAIT_US (200) ; More than 100 us
 
   lda #(%0011 << DATA_BASE)
-  sta PORTB
+  sta LCD_PORT
   ora #E
-  sta PORTB
+  sta LCD_PORT
   eor #E
-  sta PORTB
+  sta LCD_PORT
 
   ; sei
   WAIT_US (200)
 
 ; Initialize
   lda #(%0010 << DATA_BASE)           ; function set 4-bit
-  sta PORTB
+  sta LCD_PORT
   ora #E
-  sta PORTB
+  sta LCD_PORT
   eor #E
-  sta PORTB
+  sta LCD_PORT
 
   lda #%00101000           ; function set (DataLength4Bit=0, NLines2=1, Font=0, 5x8)
   jsr lcd_instruction
@@ -72,32 +75,32 @@ check_busy_flag:
   pha
   phx
   lda #(E|RW|RS) ; configure data bus as input
-  sta DDRB
+  sta LCD_DDR
 
 lcd_busy:
   lda #RW
-  sta PORTB
+  sta LCD_PORT
   lda #(RW | E)
-  sta PORTB
+  sta LCD_PORT
 
-  lda PORTB
+  lda LCD_PORT
 
   and #(%1000 << DATA_BASE)
   tax
 
   lda #RW
-  sta PORTB
+  sta LCD_PORT
   lda #(RW | E)
-  sta PORTB
+  sta LCD_PORT
 
   txa
   bne lcd_busy
 
   lda #RW
-  sta PORTB
+  sta LCD_PORT
 
   lda #(E|RW|RS|($f << DATA_BASE))
-  sta DDRB
+  sta LCD_DDR
 
   plx
   pla
@@ -148,26 +151,26 @@ lcd_write:
   and #$f0 ; NOTE: fix this bit-fiddling port storing stuff
   lsr
   lsr
-  sta PORTB
+  sta LCD_PORT
   txa
   ora #E
-  ora PORTB
-  sta PORTB
+  ora LCD_PORT
+  sta LCD_PORT
   eor #E
-  sta PORTB
+  sta LCD_PORT
 
   tya
   and #$0f
   asl
   asl
 
-  sta PORTB
+  sta LCD_PORT
   txa
   ora #E
-  ora PORTB
-  sta PORTB
+  ora LCD_PORT
+  sta LCD_PORT
   eor #E
-  sta PORTB
+  sta LCD_PORT
 
   tya
   rts

@@ -1,17 +1,20 @@
 # Clock Program TODO
 
 ## Hardware
+  * Add more I/O
+    - ~~(Make space on board by moving LCD)~~
+    - ~~Add second VIA chip to board~~
+    - ~~Design VIA logic~~
+    - ~~Wire VIA address logic~~
+    - Maybe add interrupt logic?
+    - Clean up wires
   * LCD Backlight control
     - One transistor (on/off)
     - OR: two transistors feeding a resistor DAC
-  * Better button interrupt logic (with exor chips + d latch chips)
-    - not important, doesn't change the logic, just the chip overhead
+  * More efficient button interrupt logic (with exor chips + d latch chips)
 
 ## Software
   * Main Loop
-    - **Investigate why rtc_write is locking the processor**
-      * (same thing that happened with rtc_read earlier)
-    - ~~Have two parts of the main loop~~
     - Debounce MS negative edges
       * store current state of MS
       * -> swap between interrupt on pos/neg edge every interrupt
@@ -19,13 +22,15 @@
       * For alarm update checks and stuff
       * As well as LCD backlight manager
       * And timer
-    - ~~Use U/D/L/R buttons~~
+    - Use an RTC buffer that updates infrequently
+      * user programs can read out of that to minimize spi bus usage
+      * Possibly also write into buffer, and flush to RTC?
+      * makes it more OS-like
 
 
   * ~~Clock display~~
 
   * Clock updater
-    - ~~Use Buttons~~
     - Maybe set Clock Halt on init
       * and make sure to unset it on de-init,
         -> otherwise clock.c will re-write defaults onto the rtc

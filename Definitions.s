@@ -1,18 +1,88 @@
-PORTB = $6000
-PORTA = $6001
-DDRB = $6002
-DDRA = $6003
-T1CL = $6004 ;T1 counter latches
-T1CH = $6005
-T1LL = $6006 ; T1 latches
-T1LH = $6007
-T2CL = $6008
-T2CH = $6009
-SR =  $600A
-ACR = $600B ; Auxillary Control Register (T1, T2, SR, )
-PCR = $600C ; CA,CB Control (interrupt lines)
-IFR = $600D ; Interrupt Flags Register
-IER = $600E ; Interrupt Enable Register
+
+; chip defines:
+LCD_PORT = VIA2_PORTB
+LCD_DDR  = VIA2_DDRB
+
+RTC_PORT = VIA1_PORTA
+RTC_DDR  = VIA1_DDRA
+
+BUTTON_PORT = VIA1_PORTA
+
+
+; address defines:
+VIA1_BASE = $6000
+VIA2_BASE = $7000
+
+PORTB_OFFS = $0
+PORTA_OFFS = $1
+DDRB_OFFS =  $2
+DDRA_OFFS =  $3
+T1CL_OFFS =  $4 ;T1 counter latches
+T1CH_OFFS =  $5
+T1LL_OFFS =  $6 ; T1 latches
+T1LH_OFFS =  $7
+T2CL_OFFS =  $8
+T2CH_OFFS =  $9
+SR_OFFS =    $A
+ACR_OFFS =   $B ; Auxillary Control Register (T1, T2, SR, )
+PCR_OFFS =   $C ; CA,CB Control (interrupt lines)
+IFR_OFFS =   $D ; Interrupt Flags Register
+IER_OFFS =   $E ; Interrupt Enable Register
+
+
+
+; via1 defines (via1 is the only one that gets interrupts)
+VIA1_PORTB = (VIA1_BASE+PORTB_OFFS)
+VIA1_PORTA = (VIA1_BASE+PORTA_OFFS)
+VIA1_DDRB  = (VIA1_BASE+DDRB_OFFS)
+VIA1_DDRA  = (VIA1_BASE+DDRA_OFFS)
+VIA1_T1CL  = (VIA1_BASE+T1CL_OFFS)
+VIA1_T1CH  = (VIA1_BASE+T1CH_OFFS)
+VIA1_T1LL  = (VIA1_BASE+T1LL_OFFS)
+VIA1_T1LH  = (VIA1_BASE+T1LH_OFFS)
+VIA1_T2CL  = (VIA1_BASE+T2CL_OFFS)
+VIA1_T2CH  = (VIA1_BASE+T2CH_OFFS)
+VIA1_SR    = (VIA1_BASE+SR_OFFS)
+VIA1_ACR   = (VIA1_BASE+ACR_OFFS)
+VIA1_PCR   = (VIA1_BASE+PCR_OFFS)
+VIA1_IFR   = (VIA1_BASE+IFR_OFFS)
+VIA1_IER   = (VIA1_BASE+IER_OFFS)
+
+; via2 defines
+VIA2_PORTB = (VIA2_BASE+PORTB_OFFS)
+VIA2_PORTA = (VIA2_BASE+PORTA_OFFS)
+VIA2_DDRB  = (VIA2_BASE+DDRB_OFFS)
+VIA2_DDRA  = (VIA2_BASE+DDRA_OFFS)
+VIA2_T1CL  = (VIA2_BASE+T1CL_OFFS)
+VIA2_T1CH  = (VIA2_BASE+T1CH_OFFS)
+VIA2_T1LL  = (VIA2_BASE+T1LL_OFFS)
+VIA2_T1LH  = (VIA2_BASE+T1LH_OFFS)
+VIA2_T2CL  = (VIA2_BASE+T2CL_OFFS)
+VIA2_T2CH  = (VIA2_BASE+T2CH_OFFS)
+VIA2_SR    = (VIA2_BASE+SR_OFFS)
+VIA2_ACR   = (VIA2_BASE+ACR_OFFS)
+VIA2_PCR   = (VIA2_BASE+PCR_OFFS)
+VIA2_IFR   = (VIA2_BASE+IFR_OFFS)
+VIA2_IER   = (VIA2_BASE+IER_OFFS)
+
+; for backwards compatibility:
+PORTB = VIA1_PORTB
+PORTA = VIA1_PORTA
+DDRB  = VIA1_DDRB
+DDRA  = VIA1_DDRA
+T1CL  = VIA1_T1CL
+T1CH  = VIA1_T1CH
+T1LL  = VIA1_T1LL
+T1LH  = VIA1_T1LH
+T2CL  = VIA1_T2CL
+T2CH  = VIA1_T2CH
+SR    = VIA1_SR
+ACR   = VIA1_ACR
+PCR   = VIA1_PCR
+IFR   = VIA1_IFR
+IER   = VIA1_IER
+
+
 ; For ACR:
 T1_ONESHOT = (%00 << 6)
 T1_CONT    = (%01 << 6)
@@ -39,9 +109,9 @@ CB1_POS = (%1 << 4)
   macro WAIT_US
   pha
   lda #(\1 & $ff)
-  sta T1CL
+  sta VIA1_T1CL
   lda #((\1 & $ff00) >> 8)
-  sta T1CH
+  sta VIA1_T1CH
   wai
 
   if ((\1 >> 16) != 0)
@@ -49,8 +119,8 @@ CB1_POS = (%1 << 4)
   ldy #(\1 >> 16)
 WAIT_US_\@:
   lda #$FF
-  sta T1CL
-  sta T1CH
+  sta VIA1_T1CL
+  sta VIA1_T1CH
   wai
 
   dey
