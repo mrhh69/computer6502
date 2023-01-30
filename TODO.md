@@ -2,18 +2,17 @@
 
 ## Hardware
   * 2nd VIA
-    - Maybe add interrupt logic?
+    - Maybe add interrupt logic (OR the IRQ's together)
     - Clean up wires
   * LCD Backlight control
     - One transistor (on/off)
     - OR: two transistors feeding a resistor DAC
+  * Solder SD card holder to wires
   * More efficient button interrupt logic (with exor chips + d latch chips)
 
 ## Software
   * Main Loop
-    - Debounce MS negative edges
-      * store current state of MS
-      * -> swap between interrupt on pos/neg edge every interrupt
+    - ~~**Debounce MS negative edges**~~
     - Add a background_periodic function to each mode?
       * For alarm update checks and stuff
       * As well as LCD backlight manager

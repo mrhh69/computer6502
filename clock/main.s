@@ -46,11 +46,12 @@ PERIODIC_TICKS = 8
 NUM_MODES=3
 
 BUTTON_CLR=%01000000; PORTA
+BUTTON_MS =%10000000; PORTA
 
   section text
 
 pre_init:
-  lda #%11000011
+  lda #%01000011
   sta VIA1_DDRA
   lda #$00
   sta VIA1_DDRB
@@ -159,9 +160,22 @@ update_buttons:
 ; the fact that this is done every 1/8 seconds is good for debouncing
   lda _mode_select_edge ; check MS button
   beq .not_new
-; mode select pressed
+
+; ---- mode select pressed ----
   lda #0
   sta _mode_select_edge
+; update mode select value/edge
+  lda PORTA
+  and #BUTTON_MS
+  beq .low
+.pos:
+; read mode select is 1
+; trigger interrupt on negative edge
+  lda PCR
+  and #~CA1_POS
+  sta PCR
+
+; Only go to next mode on positive edge
 ; next mode (mode = (mode + 1 == NUM_MODES) ? 0 : mode + 1)
   lda _mode
   inc
@@ -170,12 +184,27 @@ update_buttons:
   lda #0
 .nonz:
   sta _mode
+
+  ;lda #1
+  bra .out
+.low:
+; read mode select is 0
+; trigger on positive edge
+  lda PCR
+  ora #CA1_POS
+  sta PCR
+  ;lda #0
+.out:
+  ;sta _mode_select_val
+
+
 ; do init on new mode
   cli
   jsr _do_init
   sei
 .not_new:
 
+; ---- check other buttons ----
   lda _button_edge ; UDLR buttons
   beq .no_button_edge
 ; clear interrupt
@@ -217,21 +246,6 @@ interrupt_timer1:
 interrupt_ca1:
   lda #1
   sta _mode_select_edge
-;  lda _mode_select_val
-;  eor #1
-;  sta _mode_select_val
-;  and #1
-;  beq .trans_neg
-;.trans_pos:
-;  lda PCR
-;  ora #(CA1_POS)
-;  sta PCR
-;  rts
-;.trans_neg:
-;  lda PCR
-;  and #(~CA1_POS)
-;  sta PCR
-;  rts
 interrupt_cb1:
   lda #1
   sta _button_edge

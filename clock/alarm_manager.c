@@ -76,6 +76,8 @@ void alarm_manager_periodic() {
 
 void alarm_manager_button() {
   unsigned char pressed_buttons = (prev_states ^ button_states) & button_states;
+
+  /* update field value: */
   if (pressed_buttons & BUTTON_UP)    {
     if      (field == FIELD_HOURS)   {if (++alarm.hours   >= 24) alarm.hours = 0;}
     else if (field == FIELD_MINUTES) {if (++alarm.minutes >= 60) alarm.minutes = 0;}
@@ -88,6 +90,7 @@ void alarm_manager_button() {
     else if (field == FIELD_ENABLE)  alarm.flags ^= ALARM_ACTIVE; // toggle active
     goto field_change;
   }
+  /* change currently selected field (can select nothing) */
   if (pressed_buttons & BUTTON_LEFT)  {
     field--;  // if field is decremented past zero, it wraps around to 255
     if (field > NUM_FIELDS) field = NUM_FIELDS;
