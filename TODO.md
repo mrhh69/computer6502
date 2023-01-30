@@ -1,11 +1,7 @@
 # Clock Program TODO
 
 ## Hardware
-  * Add more I/O
-    - ~~(Make space on board by moving LCD)~~
-    - ~~Add second VIA chip to board~~
-    - ~~Design VIA logic~~
-    - ~~Wire VIA address logic~~
+  * 2nd VIA
     - Maybe add interrupt logic?
     - Clean up wires
   * LCD Backlight control
@@ -42,8 +38,8 @@
     - Handlers for every button, to detect inactivity
 
   * Alarm manager
-    - Alarm consist of hours:minutes
-    - Store current alarm in unused RTC memory (persists afer power-off)
+    - ~~Store current alarm in unused RTC memory~~
+    - periodic checks for alarm done (every few seconds)
     - Blink LED on alarm done
     - Also play music maybe????
 

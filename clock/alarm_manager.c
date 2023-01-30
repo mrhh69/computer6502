@@ -1,10 +1,8 @@
+#include "main.h"
 #include "i2c_lib/rtc.h"
 #include "lcd_lib/lcd.h"
 #include "alarm_manager.h"
 
-
-#define ALARM_RTC_ADDR 0x10
-#define ALARM_RTC_LEN  0x03
 
 #define ALARM_HERE    0x80  // flags marks valid alarm data
 #define ALARM_ACTIVE  0x40  // is alarm enabled?
@@ -13,18 +11,17 @@ static struct alarm {
   unsigned char flags;   // alarm flags
   unsigned char hours;   // hours (not RTC format)
   unsigned char minutes; // minutes
-  //unsigned char pad;
 } alarm;
 static const struct alarm alarm_default;
 
+#define NUM_FIELDS 3
 #define FIELD_HOURS    0
 #define FIELD_MINUTES  1
 #define FIELD_ENABLE   2
 static unsigned char field;
-static unsigned char field_val;
 
-static const char alarm_active[4] = "ON ";
-static const char alarm_inactive[4] = "OFF";
+static const char alarm_active  [3] = "ON ";
+static const char alarm_inactive[3] = "OFF";
 
 #define MAX_COUNTS 4
 #define B_COUNTS 2
@@ -51,7 +48,7 @@ void alarm_manager_periodic() {
   putc(':');
 
   /* draw minutes (field == 1) */
-  put_blink(FIELD_MINUTES, ntortc(alarm.hours));
+  put_blink(FIELD_MINUTES, ntortc(alarm.minutes));
 
   lcdins(0x80|0x40|0); // move cursor to second line beginning
   if (field == FIELD_ENABLE && counts < B_COUNTS) {
@@ -78,7 +75,31 @@ void alarm_manager_periodic() {
 }
 
 void alarm_manager_button() {
-  
+  unsigned char pressed_buttons = (prev_states ^ button_states) & button_states;
+  if (pressed_buttons & BUTTON_UP)    {
+    if      (field == FIELD_HOURS)   {if (++alarm.hours   >= 24) alarm.hours = 0;}
+    else if (field == FIELD_MINUTES) {if (++alarm.minutes >= 60) alarm.minutes = 0;}
+    else if (field == FIELD_ENABLE)  alarm.flags ^= ALARM_ACTIVE; // toggle active
+    goto field_change;
+  }
+  if (pressed_buttons & BUTTON_DOWN)  {
+    if      (field == FIELD_HOURS)   {if (--alarm.hours   >= 24) alarm.hours = 23;}
+    else if (field == FIELD_MINUTES) {if (--alarm.minutes >= 60) alarm.minutes = 59;}
+    else if (field == FIELD_ENABLE)  alarm.flags ^= ALARM_ACTIVE; // toggle active
+    goto field_change;
+  }
+  if (pressed_buttons & BUTTON_LEFT)  {
+    field--;  // if field is decremented past zero, it wraps around to 255
+    if (field > NUM_FIELDS) field = NUM_FIELDS;
+  }
+  if (pressed_buttons & BUTTON_RIGHT) {
+    field++;
+    if (field > NUM_FIELDS) field = 0;
+  }
+  return;
+field_change:
+  /* push changes straight to RTC */
+  rtc_write((char *)&alarm, ALARM_RTC_LEN, ALARM_RTC_ADDR);
 }
 
 

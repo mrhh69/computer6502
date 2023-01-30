@@ -43,7 +43,7 @@ CURSOR_BLINK=0
 ; ticks of timer2 runouts until periodic functions are run
 PERIODIC_TICKS = 8
 
-NUM_MODES=2
+NUM_MODES=3
 
 BUTTON_CLR=%01000000; PORTA
 
