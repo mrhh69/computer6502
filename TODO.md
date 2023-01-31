@@ -1,23 +1,22 @@
 # Clock Program TODO
 
 ## Hardware
-  * 2nd VIA
-    - Maybe add interrupt logic (OR the IRQ's together)
-    - Clean up wires
   * LCD Backlight control
-    - One transistor (on/off)
+    - **One transistor (on/off)**
     - OR: two transistors feeding a resistor DAC
+  * 2nd VIA
+    - Clean up wires
+    - Maybe add interrupt logic (OR the IRQ's together)
   * Solder SD card holder to wires
   * More efficient button interrupt logic (with exor chips + d latch chips)
 
 ## Software
   * Main Loop
-    - ~~**Debounce MS negative edges**~~
     - Add a background_periodic function to each mode?
       * For alarm update checks and stuff
       * As well as LCD backlight manager
       * And timer
-    - Use an RTC buffer that updates infrequently
+    - **Use an RTC buffer that updates infrequently**
       * user programs can read out of that to minimize spi bus usage
       * Possibly also write into buffer, and flush to RTC?
       * makes it more OS-like
@@ -30,15 +29,18 @@
       * and make sure to unset it on de-init,
         -> otherwise clock.c will re-write defaults onto the rtc
 
-  * New LCD backlight manager
-    - Writes to LCD Backlight control
-      * Hold MS button for poweroff?
-      * Shutdown backlight after some time of inactivity?
-    - Handlers for every button, to detect inactivity
+  * **New LCD backlight manager**
+    - **Special mode (255?)**
+      * _NOT_ written in C
+      * Automatically starts when MS held or inactivity
+      * Automatically stops when button pressed
+    - _OR_ Normal mode?
+      * Change brightness or contrast
+      * Uses button handlers for inactivity
+      * ... and add code to main.s to support it specifically?
 
   * Alarm manager
-    - ~~Store current alarm in unused RTC memory~~
-    - periodic checks for alarm done (every few seconds)
+    - periodic **checks for alarm done** (every few seconds)
     - Blink LED on alarm done
     - Also play music maybe????
 

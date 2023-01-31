@@ -12,6 +12,7 @@ RTC_WRITE = ((RTC_ADDR<<1)|0)
 RTC_READ  = ((RTC_ADDR<<1)|1)
 
 
+  include cregs.s
   include Definitions.s
 
   global rtc_init
@@ -29,7 +30,7 @@ rtc_init:
   WAIT_US 10000
   rts
 
-; Buffer pointer in $00, buffer length in X register
+; Buffer pointer in r0, buffer length in X register
 ; RTC read start address in A register, Y register destroyed
 ; NOTE: 2 ack's (plus 8 in the loop) to check
 ; ack handling is similar here as in rtc_read -> reference the comments there
@@ -54,7 +55,7 @@ rtc_write:
   ldy #0
 .loopx:
   phx
-  lda ($00), y
+  lda (r0), y
   tax
   phy
   jsr put_byte
@@ -80,7 +81,7 @@ rtc_write:
   jmp rtc_write
 
 
-; Buffer pointer in $00, buffer length in X register
+; Buffer pointer in r0, buffer length in X register
 ; RTC read start address in A register, Y register destroyed
 ; NOTE: 3 ack's to check, after writing command bytes to the RTC
 rtc_read:
@@ -116,7 +117,7 @@ rtc_read:
   jsr get_byte
   ply
   plx
-  sta ($00), y
+  sta (r0), y
   iny
   dex
   beq .noack

@@ -15,20 +15,12 @@
 
   section text
 
-; __reg("a/x") char * buf, __reg("r0") unsigned char buf_len, __reg("r1") unsigned char rtc_addr
+; __reg("r0/r1") char * buf, __reg("x") unsigned char buf_len, __reg("a") unsigned char rtc_addr
 _rtc_write:
-  sta $00
-  stx $01
-  ldx r0
-  lda r1
   jsr rtc_write
   rts
-; __reg("a/x") char * buf, __reg("r0") unsigned char buf_len, __reg("r1") unsigned char rtc_addr
+; __reg("r0/r1") char * buf, __reg("x") unsigned char buf_len, __reg("a") unsigned char rtc_addr
 _rtc_read:
-  sta $00
-  stx $01
-  ldx r0
-  lda r1
   jsr rtc_read
   rts
 

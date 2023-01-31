@@ -124,6 +124,11 @@ _main:
   sei
 ; ----do periodic stuff here----
 
+  inc _mode_select_counts
+  bne .noinc
+  inc _mode_select_counts + 1
+.noinc:
+
   jsr update_buttons
 
 ; check ticks
@@ -161,9 +166,11 @@ update_buttons:
   lda _mode_select_edge ; check MS button
   beq .not_new
 
-; ---- mode select pressed ----
+; ---- mode select changed state ----
   lda #0
   sta _mode_select_edge
+  sta _mode_select_counts
+  sta _mode_select_counts + 1
 ; update mode select value/edge
   lda PORTA
   and #BUTTON_MS
@@ -230,7 +237,7 @@ update_buttons:
 
 
 
-
+; ---- interrupt handlers ----
 interrupt_timer2:
 ; set interrupted flag
   lda #1
@@ -260,6 +267,7 @@ _timer2_interrupted: reserve 1
 _ticks: reserve 1
 ; flag set after ca1 interrupt (positive edge)
 _mode_select_edge: reserve 1
+_mode_select_counts: reserve 2
 ;_mode_select_val: reserve 1
 _button_edge: reserve 1
 _button_states: reserve 1
