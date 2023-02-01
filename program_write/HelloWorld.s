@@ -17,6 +17,8 @@ reset:
   sta VIA2_PORTB
   sta VIA2_PORTA
 
+  lda #(~INT_EN & $ff)
+  sta VIA1_IER
   lda #(INT_EN|INT_T1)
   sta VIA1_IER
   lda #(T1_ONESHOT)
@@ -44,7 +46,11 @@ irq:
   bit #INT_T1
   bne .timer1
 
-  stp
+  ;lda #$aa
+  ;sta VIA1_PORTA
+  ;stp
+  ;pla
+  ;rti
 
 .timer1:
   lda #INT_T1
@@ -54,7 +60,7 @@ irq:
 
 
 
-message:  asciiz "Hello, word!                            "
+message:  asciiz "Hello, word!"
 
   include 4BitLCD.s
 
