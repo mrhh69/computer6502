@@ -7,8 +7,8 @@
   extern rtc_write
   extern rtc_read
 ; C Wrapper functions (for rtc.s)
-  global _rtc_write
-  global _rtc_read
+  ;global _rtc_write
+  ;global _rtc_read
 ; C utilities
   global _rtcton
   global _ntortc
@@ -16,13 +16,13 @@
   section text
 
 ; __reg("r0/r1") char * buf, __reg("x") unsigned char buf_len, __reg("a") unsigned char rtc_addr
-_rtc_write:
-  jsr rtc_write
-  rts
+;_rtc_write:
+;  jsr rtc_write
+;  rts
 ; __reg("r0/r1") char * buf, __reg("x") unsigned char buf_len, __reg("a") unsigned char rtc_addr
-_rtc_read:
-  jsr rtc_read
-  rts
+;_rtc_read:
+;  jsr rtc_read
+;  rts
 
 
 ; overwrites r0 (TODO: make sure that is correct int the vbcc ABI standard)

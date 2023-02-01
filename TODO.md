@@ -16,10 +16,9 @@
       * For alarm update checks and stuff
       * As well as LCD backlight manager
       * And timer
-    - **Use an RTC buffer that updates infrequently**
-      * user programs can read out of that to minimize spi bus usage
-      * Possibly also write into buffer, and flush to RTC?
-      * makes it more OS-like
+    - **_DEBUG RTC BUFFER_**
+      * It is still not writing out to RTC correctly
+      * WHY?
 
 
   * ~~Clock display~~

@@ -32,6 +32,8 @@
   extern _do_periodic
   extern _do_button_press
   extern _mode
+; from rtc_control.s
+  extern _rtc_buf_flush
 
 ; PB6 (->timer2) oscillating at 32768
 ; ticks for each loop
@@ -87,6 +89,10 @@ pre_init:
 ; -> one, that updates button every timer2 runout
 ; -> two, that runs periodic code every PERIODIC_TICKS ticks
 _main:
+  lda #'s'
+  jsr print_char
+; set up RTC buffer by flushing
+  jsr _rtc_buf_flush
 ; clear button states:
   lda BUTTON_PORT
   ora #BUTTON_CLR
@@ -102,6 +108,9 @@ _main:
   sta PCR
   lda #(INT_EN|INT_T1|INT_T2|INT_CA1|INT_CB1)
   sta IER
+
+  lda #'n'
+  jsr print_char
 
   jsr _do_init ; intial mode init
 
@@ -148,6 +157,9 @@ _main:
   adc #'0'
   jsr print_char
 
+
+; flush buffer
+  jsr _rtc_buf_flush
 
   cli
   jsr _do_periodic

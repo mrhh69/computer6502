@@ -15,6 +15,11 @@ LCD_BUF_SIZE = $10  ; lcd RAM is $00 - $3f
   extern rtc_write
   extern rtc_read
 
+
+; aliases:
+  global _rtc_read
+  global _rtc_write
+; functions:
   global _rtc_buf_read
   global _rtc_buf_write
   global _rtc_buf_flush
@@ -27,6 +32,7 @@ LCD_BUF_SIZE = $10  ; lcd RAM is $00 - $3f
 ; *buf -> r0
 ; addr -> A
 ; size -> X
+_rtc_read:
 _rtc_buf_read:
 ; copy rtc_buf -> buf
   tay
@@ -42,41 +48,65 @@ _rtc_buf_read:
 
 ; Write into RTC buffer, and update dirty
 
+_rtc_write:
 _rtc_buf_write:
 ; Update buffer dirty bounds
 ; (bounds that will have to be written to RTC)
-  cmp dirty_high
-  bpl .not_high
-  sta dirty_high
-.not_high:
+; low -> if addr (a) is lower
+; high -> if addr (a) + len(x) is higher
   cmp dirty_low
-  bmi .not_low
+  bcc .not_low
   sta dirty_low
 .not_low:
+  sta r2
+  txa
+  clc
+  adc r2
+  cmp dirty_high  ; TODO: check this math (VERY IMPORTANT)
+  bcc .not_high
+  sta dirty_high
+.not_high:
+
 ; copy buf -> rtc_buf
-  tay
+  ldy r2
 .loop:
-  lda _rtc_buf, y
-  sta (r0), y
+  lda (r0), y
+  sta _rtc_buf, y
   iny
   dex
   bne .loop
 
   rts
 
+
 _rtc_buf_flush:
 ; Write into RTC between dirty_low and dirty_high
+  lda #'f'
+  jsr print_char
   lda #<_rtc_buf
   ldx #>_rtc_buf
   sta r0
   stx r1
-  lda dirty_high  ; NOTE: this is very unsafe, if high-low is negative, bad things happen
-  clc ; clc in order to add 1 to result
+  lda dirty_high  ; NOTE: this is very unsafe, if (high-low) is negative, bad things happen
+  sec
   sbc dirty_low
   beq .buf_clean
   tax
   lda dirty_low
   jsr rtc_write
+  lda #'w'
+  jsr print_char
+  lda dirty_high
+  clc
+  adc #'0'
+  jsr print_char
+  lda dirty_low
+  clc
+  adc #'0'
+  jsr print_char
+  lda #0
+  sta dirty_high
+  sta dirty_low
 .buf_clean: ; no need to flush to rtc
 
 ; Read from RTC into buffer
@@ -94,5 +124,5 @@ _rtc_buf_flush:
   section bss
 _rtc_buf:
   reserve LCD_BUF_SIZE
-dirty_low:  reserve 1
-dirty_high: reserve 1
+dirty_low:  reserve 1  ; lowest byte in buffer that has been written to
+dirty_high: reserve 1  ; highest byte in buffer + 1
