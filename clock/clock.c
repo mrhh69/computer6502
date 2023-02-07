@@ -71,7 +71,11 @@ void clock_lcd_init() {
   if (buf[7] != rtc_defaults[7]) {
     /* rewrite control register separately */
     rtc_write((char *)&rtc_defaults[7], 1, 7);
+<<<<<<< HEAD
     //rtc_buf_flush(); // force control to be written to RTC (to start timer2)
+=======
+    rtc_buf_flush(); // force control to be written to RTC (to start timer2)
+>>>>>>> f5cb42cd8b18be1beac09354cbbfc6c745e3849a
   }
 
   rtc_buf_flush();
