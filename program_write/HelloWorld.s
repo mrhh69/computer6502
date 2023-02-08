@@ -1,4 +1,4 @@
-  include defs.s
+  ;include defs.s
   org $8000
 
 reset:

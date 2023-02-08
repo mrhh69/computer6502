@@ -1,4 +1,6 @@
+#include "lcd_lib/lcd.h"
 #include "main.h"
+#include "rtc_buf.h"
 
 #define RTC_DEFAULT_LEN 8
 
@@ -15,7 +17,7 @@ const char rtc_defaults[RTC_DEFAULT_LEN] = {
   0x15, // Day of the month
   0x01, // month
   0x23, // year
-  0x10, // control register (OUT 0 0 SQWE 0 0 RS1 RS0)
+  0x13, // control register (OUT 0 0 SQWE 0 0 RS1 RS0)
 };
 
 static char buf[8];
@@ -23,7 +25,7 @@ static char buf[8];
 
 void update_lcd_clock() {
   /* rtc_read into a buffer */
-  rtc_read(buf, 7, 0);
+  rtc_buf_read(buf, 7, 0);
   /* print data onto lcd using putc and lcdins */
   /* NOTE:
    * not LCD reset, because quickly clearing and
@@ -43,26 +45,30 @@ void update_lcd_clock() {
 
 int main() {
   char c;
-  /* first, rtc_read to make sure clock is running */
-  rtc_read(buf, 8, 0);
-  if (buf[0] & 0x80) {
-    /* if not, then re-write rtc defaults */
-    rtc_write((char *)rtc_defaults, RTC_DEFAULT_LEN, 0);
-  }
-  if (buf[7] != rtc_defaults[7]) {
-    /* rewrite control register separately */
-    rtc_write((char *)&rtc_defaults[7], 1, 7);
-  }
 
   lcdins(0x01); // reset lcd
-  lcdins(15);
-  lcdins(69);
+  putc('s');
+
+  rtc_buf_flush();
+
+  /* first, rtc_read to make sure clock is running */
+  rtc_buf_read(buf, 8, 0);
+
+  rtc_buf_write((char *)rtc_defaults, RTC_DEFAULT_LEN, 0);
+
+  if (buf[0] & 0x80) {
+    /* if not, then re-write rtc defaults */
+    //rtc_buf_write((char *)rtc_defaults, RTC_DEFAULT_LEN, 0);
+  }
+  else if (buf[7] != rtc_defaults[7]) {
+    /* rewrite control register separately */
+    //rtc_buf_write((char *)&rtc_defaults[7], 1, 7);
+  }
+
+  rtc_buf_flush();
+
+  putc('b');
 
   /* enter loop */
   timer2_loop();
-  /*
-  for (;;) {
-    update_lcd_clock();
-  }
-  */
 }

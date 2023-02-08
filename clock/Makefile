@@ -26,7 +26,7 @@ TMP_VBCC_ASM=/tmp/tmp_vbcc_asm.s
 VASM_FLAGS=-wdc02 -I"../"
 VLINK_FLAGS=-Mlisting.txt
 # 1+2+4+8+16+32+128+256
-VCC_FLAGS=-c02 -O=447
+VCC_FLAGS=-c02 -O=447 -I"../"
 VCA_FLAGS=-wdc02 -opt-branch
 
 SRCS=  $(wildcard *.s)
@@ -53,4 +53,7 @@ clean:
 	make -C $(I2C_DIR) clean
 	make -C $(LCD_DIR) clean
 dump: main.bin
-	cat listing.txt | grep -v ": local abs" | ack --color-match=red --passthru "0x.... [_a-zA-Z0-9]*: global .*"
+	cat listing.txt \
+	| grep -v ": local abs" \
+	| grep -v ": local reloc" \
+	| ack --color-match=red --passthru "0x.... [_a-zA-Z0-9]*: global .*"

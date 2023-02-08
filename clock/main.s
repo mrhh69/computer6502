@@ -16,7 +16,7 @@
   global pre_init         ; called before anything
   global interrupt_timer1 ; interrupts
   global interrupt_timer2
-  global button_press
+  global interrupt_ca1
 
 ; from clock.c
   extern _update_lcd_clock
@@ -25,13 +25,20 @@
 ; PB6 oscillating at 32768, 4096/32768 = 1/8 hz
 TIMER2_COUNT = 4096
 
+
+CURSOR_ON=0
+CURSOR_BLINK=0
+
   section text
 
 pre_init:
   sei
+  lda #(~$40)
+  sta VIA1_DDRB
   lda #$ff
-  sta DDRA
-  sta DDRB
+  sta VIA1_DDRA
+  sta VIA2_DDRA
+  sta VIA2_DDRB
 
   lda #(~INT_EN & $ff)
   sta IER
@@ -41,6 +48,7 @@ pre_init:
   sta ACR
 
   cli
+  lda #(CURSOR_ON<<1)|CURSOR_BLINK
   jsr initialize_lcd
 
 ; RTC init
@@ -52,14 +60,11 @@ pre_init:
 ; Enter a timer2 loop (periodically calling update_lcd_clock)
 _timer2_loop:
 ; enable and start timer2
-  lda (INT_EN|INT_T2)
+  lda #(INT_EN|INT_T2)
   sta IER
   lda #(T2_COUNTPB6)
   ora ACR
   sta ACR
-
-  lda #'s'
-  jsr print_char
 
 .loop:
 ; set flag to 0
@@ -78,6 +83,8 @@ _timer2_loop:
 ; do periodic stuff here:
   jsr _update_lcd_clock
 
+  jsr _rtc_buf_flush
+
   bra .loop
 
 
@@ -93,7 +100,7 @@ interrupt_timer2:
   rts
 interrupt_timer1:
   rts
-button_press:
+interrupt_ca1:
   rts
 
   section bss

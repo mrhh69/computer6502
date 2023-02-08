@@ -25,7 +25,7 @@ STACK_START = $4000
   extern pre_init
   extern interrupt_timer1
   extern interrupt_timer2
-  extern button_press ; interrupt CA1
+  extern interrupt_ca1
 
   section .text.entry
 reset:
@@ -69,23 +69,23 @@ reset:
   ldx #(__bss_start >> 8)
   sta $00
   stx $01
-bss_loop:
+.bss_loop:
   lda $01
   cmp #>__bss_end
-  bne bss_loop1
+  bne .bss_loop1
   lda $00
   cmp #<__bss_end
-  bne bss_loop1
-  jmp bss_loop_out
-bss_loop1:
+  bne .bss_loop1
+  jmp .bss_loop_out
+.bss_loop1:
   lda #0
   sta ($00)
   inc $00
-  bne b3
+  bne .b3
   inc $01
-b3:
-  jmp bss_loop
-bss_loop_out:
+.b3:
+  jmp .bss_loop
+.bss_loop_out:
 
 
   lda #(STACK_START & $ff)
@@ -132,7 +132,7 @@ irq:
 .irq_ca1: ; CA1 Interrupt
   lda #INT_CA1 ; Clear Flag
   sta IFR
-  jsr button_press ; external subroutine
+  jsr interrupt_ca1 ; external subroutine
   jmp .irq_out
 
 .irq_out:
