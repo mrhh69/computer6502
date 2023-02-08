@@ -2,7 +2,7 @@
 
 
   include cregs.s
-  include Definitions.s
+  include defs.s
 
 
 ; from lcd lib

@@ -1,0 +1,8 @@
+
+*.vobj
+*.bin
+*.txt
+a.out
+main
+program
+.*
