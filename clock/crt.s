@@ -6,11 +6,16 @@
 ;  - .text.entry: entry point for 6502
 ;  - .text.vectors: vectors to be loaded at 0xfffa
 ; Externs:
-;  - _main: main function (C abi)
-;  - interrupt_timer1: timer1 runout (assembly abi)
-;  - button_press: ca1 interrupt (assembly abi)
-;    -> NOTE: generally used for stepping programs (debugging)
-;  - pre_init: called before any C initialization (assembly abi)
+;  - pre_init: called before any C initialization
+;  - _main: main function
+;
+; NOTE: interrupt functions already have A and Status registers preserved,
+;     :  but other registers and any non-volatile memory locations should be preserved
+;  - interrupt_timer1: timer1 runout
+;  - interrupt_timer2: timer2 runout
+;  - interrupt_ca1: ca1 interrupt
+;  - interrupt_cb1: cb1 interrupt
+;
 ;  - __[data/bss]_[loc/start/end]: linker-defined data/bss segment info
 
 
@@ -123,17 +128,17 @@ irq:
   lda #INT_T1 ; Clear Interrupt flag
   sta IFR
   jsr interrupt_timer1
-  jmp .irq_out
+  bra .irq_out
 .irq_timer2:
   lda #INT_T2
   sta IFR
   jsr interrupt_timer2
-  jmp .irq_out
+  bra .irq_out
 .irq_ca1: ; CA1 Interrupt
   lda #INT_CA1 ; Clear Flag
   sta IFR
   jsr interrupt_ca1 ; external subroutine
-  jmp .irq_out
+  bra .irq_out
 
 .irq_out:
   pla

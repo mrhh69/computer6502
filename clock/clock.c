@@ -10,14 +10,42 @@ const char rtc_defaults[RTC_DEFAULT_LEN] = {
    * l ->  the last digit of the decimal value
    * So, 0x15 == 1 and 5 (or 15 decimal)
    */
-  0x02, // Seconds (top bit is CH, clock halt)
-  0x15, // Minutes
-  0x18, // Hours (bit 6 high is 12-hour mode select)
-  0x01, // Day of the week?
-  0x15, // Day of the month
+  0x00, // Seconds (top bit is CH, clock halt)
+  0x44, // Minutes
+  0x11, // Hours (bit 6 high is 12-hour mode select)
+  0x07, // Day of the week?
+  0x22, // Day of the month
   0x01, // month
   0x23, // year
   0x13, // control register (OUT 0 0 SQWE 0 0 RS1 RS0)
+};
+
+/* making it a char [12][3] seems to make vbcc use __mulint8
+ * this is because of byte-alignment, i guess vbcc doesn't
+ * do byte-alignment automatically
+ */
+const char* month_names[12] = {
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec"
+};
+const char* dotw_names[12] = {
+  "mon",
+  "tue",
+  "wed",
+  "thu",
+  "fri",
+  "sat",
+  "sun"
 };
 
 static char buf[8];
@@ -41,6 +69,24 @@ void update_lcd_clock() {
   putc('0' + ((buf[0] >> 4) & 0x7));
   putc('0' + (buf[0] & 0xf));
   putc(buf[0] & 0x80 ? 'S' : ' ');
+
+  lcdins(0x80 | 0x40); // set cursor start of line 2
+  ind = rtcton(buf[3]) - 1; /* NOTE: rtcton probably not necessary, dotw shouldn't be > 7 */
+  if (ind >= 7) return; /* invalid DOTW, prevent memory unsafety */
+  putc(dotw_names[ind][0]);
+  putc(dotw_names[ind][1]);
+  putc(dotw_names[ind][2]);
+  putc(',');
+  putc(' ');
+
+  ind = rtcton(buf[5]) - 1;
+  if (ind >= 12) return; /* invalid month, probably RTC bus failure or smth */
+  putc(month_names[ind][0]);
+  putc(month_names[ind][1]);
+  putc(month_names[ind][2]);
+  putc(' ');
+  if (buf[4] & 0x70) putc('0' + ((buf[4] >> 4) & 0x7));
+  putc('0' + (buf[4] & 0xf));
 }
 
 int main() {
