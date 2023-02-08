@@ -15,7 +15,7 @@
 
 
   include cregs.s
-  include Definitions.s
+  include defs.s
 
 
 STACK_START = $4000

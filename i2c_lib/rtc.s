@@ -12,7 +12,7 @@ RTC_WRITE = ((RTC_ADDR<<1)|0)
 RTC_READ  = ((RTC_ADDR<<1)|1)
 
 
-  include Definitions.s
+  include defs.s
 
   global rtc_init
   global rtc_write

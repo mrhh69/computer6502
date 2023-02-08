@@ -2,7 +2,7 @@
 
 
   include cregs.s
-  include Definitions.s
+  include defs.s
 
 
 ; from lcd lib
@@ -85,8 +85,6 @@ interrupt_timer2:
 ; set interrupted flag
   lda #1
   sta _timer2_interrupted
-  lda #'2'
-  jsr print_char
 ; reset timer 2
   lda #<TIMER2_COUNT
   sta T2CL
