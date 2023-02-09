@@ -90,17 +90,24 @@ _rtc_buf_write:
 
 
 _rtc_buf_flush:
-; Write into RTC between dirty_low and dirty_high
   ;lda #'f'
   ;jsr print_char
-  lda #<_rtc_buf;_rtc_defaults
-  ldx #>_rtc_buf;_rtc_defaults
+
+; do not write out if dirty_high has not been changed from zero
+; (meaning that no calls to _rtc_buf_write have been made),
+; otherwise dirty_high would have been updated
+  lda dirty_high
+  beq .buf_clean
+
+; Write into RTC between dirty_low and dirty_high
+  lda #<_rtc_buf
+  ldx #>_rtc_buf
   sta r0
   stx r1
-  lda dirty_high  ; NOTE: this is very unsafe, if (high-low) is negative, bad things happen
+  lda dirty_high  ; [and they did] -> this is very unsafe, if (high-low) is negative, bad things happen
   sec
   sbc dirty_low
-  beq .buf_clean
+  ;beq .buf_clean
   tax
 
   ;lda #'w'
