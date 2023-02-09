@@ -24,7 +24,7 @@ const char rtc_defaults[RTC_DEFAULT_LEN] = {
  * this is because of byte-alignment, i guess vbcc doesn't
  * do byte-alignment automatically
  */
-const char month_names[12][4] = {
+static const char month_names[12][4] = {
   "jan",
   "feb",
   "mar",
@@ -38,7 +38,7 @@ const char month_names[12][4] = {
   "nov",
   "dec"
 };
-const char dotw_names[12][4] = {
+static const char dotw_names[12][4] = {
   "mon",
   "tue",
   "wed",
