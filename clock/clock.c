@@ -1,61 +1,24 @@
 #include "lcd_lib/lcd.h"
+#include "i2c_lib/rtc.h"
 #include "main.h"
 #include "rtc_buf.h"
 
 #define RTC_DEFAULT_LEN 8
 
-const char rtc_defaults[RTC_DEFAULT_LEN] = {
-  /* NOTE: these numbers are in the format of 0b0hhhllll
-   * h -> the first digit of the decimal value
-   * l ->  the last digit of the decimal value
-   * So, 0x15 == 1 and 5 (or 15 decimal)
-   */
-  0x00, // Seconds (top bit is CH, clock halt)
-  0x44, // Minutes
-  0x11, // Hours (bit 6 high is 12-hour mode select)
-  0x07, // Day of the week?
-  0x22, // Day of the month
-  0x01, // month
-  0x23, // year
-  0x13, // control register (OUT 0 0 SQWE 0 0 RS1 RS0)
-};
+static const char rtc_defaults[RTC_DEFAULT_LEN];
 
 /* making it a char [12][3] seems to make vbcc use __mulint8
  * this is because of byte-alignment, i guess vbcc doesn't
  * do byte-alignment automatically
  */
-static const char month_names[12][4] = {
-  "jan",
-  "feb",
-  "mar",
-  "apr",
-  "may",
-  "jun",
-  "jul",
-  "aug",
-  "sep",
-  "oct",
-  "nov",
-  "dec"
-};
-static const char dotw_names[12][4] = {
-  "mon",
-  "tue",
-  "wed",
-  "thu",
-  "fri",
-  "sat",
-  "sun"
-};
+static const char month_names[12][4];
+static const char dotw_names[12][4];
 
-static char buf[8];
+char buf[8];
 
 
-void update_lcd_clock() {
-  char ind;
-  /* rtc_read into a buffer */
-  rtc_buf_read(buf, 7, 0);
-  /* print data onto lcd using putc and lcdins */
+void clock_lcd_print() {
+  unsigned char ind;
   /* NOTE:
    * not LCD reset, because quickly clearing and
    * setting the LCD screen causes wierd visual effects)
@@ -87,17 +50,18 @@ void update_lcd_clock() {
   putc(month_names[ind][2]);
   putc(' ');
   if (buf[4] & 0x70) putc('0' + ((buf[4] >> 4) & 0x7));
+  else putc(' ');
   putc('0' + (buf[4] & 0xf));
 }
 
-int main() {
-  char c;
+void clock_lcd_periodic() {
+  /* rtc_read into a buffer */
+  rtc_buf_read(buf, 7, 0);
+  /* print data onto lcd using putc and lcdins */
+  clock_lcd_print();
+}
 
-  lcdins(0x01); // reset lcd
-  putc('s');
-
-  rtc_buf_flush();
-
+void clock_lcd_init() {
   /* first, rtc_read to make sure clock is running */
   rtc_buf_read(buf, 8, 0);
 
@@ -114,8 +78,45 @@ int main() {
 
   rtc_buf_flush();
 
-  putc('b');
-
-  /* enter loop */
-  timer2_loop();
+  lcdins(0x01); // reset lcd
 }
+
+static const char rtc_defaults[RTC_DEFAULT_LEN] = {
+  /* NOTE: these numbers are in the format of 0b0hhhllll
+   * h -> the first digit of the decimal value
+   * l ->  the last digit of the decimal value
+   * So, 0x15 == 1 and 5 (or 15 decimal)
+   */
+  0x00, // Seconds (top bit is CH, clock halt)
+  0x00, // Minutes
+  0x22, // Hours (bit 6 high is 12-hour mode select)
+  0x01, // Day of the week?
+  0x23, // Day of the month
+  0x01, // month
+  0x23, // year
+  0x13, // control register (OUT 0 0 SQWE 0 0 RS1 RS0)
+};
+
+static const char month_names[12][4] = {
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec"
+};
+static const char dotw_names[12][4] = {
+  "mon",
+  "tue",
+  "wed",
+  "thu",
+  "fri",
+  "sat",
+  "sun"
+};

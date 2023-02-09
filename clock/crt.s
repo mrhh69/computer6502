@@ -31,9 +31,11 @@ STACK_START = $4000
   extern interrupt_timer1
   extern interrupt_timer2
   extern interrupt_ca1
+  extern interrupt_cb1
 
   section .text.entry
 reset:
+  sei
   jsr pre_init
 
 
@@ -119,6 +121,8 @@ irq:
   bne .irq_timer2
   bit #INT_CA1
   bne .irq_ca1
+  bit #INT_CB1
+  bne .irq_cb1
   ; Should not happen hopefully:
   lda #$aa
   sta PORTA
@@ -137,7 +141,12 @@ irq:
 .irq_ca1: ; CA1 Interrupt
   lda #INT_CA1 ; Clear Flag
   sta IFR
-  jsr interrupt_ca1 ; external subroutine
+  jsr interrupt_ca1
+  bra .irq_out
+.irq_cb1:
+  lda #INT_CB1
+  sta IFR
+  jsr interrupt_cb1
   bra .irq_out
 
 .irq_out:
