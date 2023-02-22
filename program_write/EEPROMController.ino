@@ -8,7 +8,7 @@
 #define CLOCK 2
 #define DATA 3
 #define LATCH 4
-#define WRITE 5
+#define WRITE_PIN 5
 /* data pins from pin 6 to pin 13 */
 
 #define EEPROM_WC_DELAY 20
@@ -18,8 +18,8 @@
 
 
 
-void enableWrite()      { digitalWrite(WRITE, LOW);}
-void disableWrite()     { digitalWrite(WRITE, HIGH);}
+void enableWrite()      { digitalWrite(WRITE_PIN, LOW);}
+void disableWrite()     { digitalWrite(WRITE_PIN, HIGH);}
 
 // set bus direction
 void setModeOutput() {
@@ -156,7 +156,7 @@ void setByte(byte value, word address) {
 void page_write(char *buf, int addr) {
   disableWrite();
   setModeOutput();
-    
+
   for (int i = 0; i < 64; i++) {
     setByte(buf[i], addr + i);
   }
@@ -171,6 +171,11 @@ void page_write(char *buf, int addr) {
 
 
 
+/* INSANE coincidence:
+ * so I accidentally named both the WRITE pin and WRITE command defines "WRITE",
+ * but they were both the same value: 5, so I never noticed LMAO
+ */
+
 #define SDPOFF 1
 #define SDPON 2
 #define SADDR 3
@@ -178,7 +183,8 @@ void page_write(char *buf, int addr) {
 #define WRITE 5
 #define READ 6
 #define PAGE_WRITE 7
-#define INTERNALS 8
+#define SYNC 8
+#define SYNC_BYTE 0x69
 
 
 void setup() {
@@ -188,7 +194,7 @@ void setup() {
   digitalWrite(CLOCK, 0);
   digitalWrite(LATCH, 0);
   disableWrite();
-  pinMode(WRITE, OUTPUT);
+  pinMode(WRITE_PIN, OUTPUT);
 
   Serial.begin(115200);
 
@@ -206,7 +212,7 @@ void setup() {
     else if (c == WRITE) {
       char buf[256];
       Serial.readBytes(buf, length);
-      for (int i = 0; i < length; i++) writeEEPROM(address + i, buf[i]/*, true*/);
+      for (int i = 0; i < length; i++) writeEEPROM(address + i, buf[i]);
     }
     else if (c == READ) {
       for (int i = 0; i < length; i++) Serial.write(readEEPROM(address + i));
@@ -217,8 +223,8 @@ void setup() {
       /* address MUST be 64-byte aligned */
       page_write(buf, address);
     }
-    else if (c == INTERNALS) {
-      Serial.write((char *)&address, 2);
+    else if (c == SYNC) {
+      Serial.write(SYNC_BYTE);
     }
     else if (c == -1) continue; /* no data */
   }
