@@ -1,9 +1,10 @@
+
+
   include defs.s
-  org $8000
+
+  section .text.entry
 
 reset:
-  ldx #$ff
-  txs
   sei
 
   lda #$ff
@@ -46,13 +47,11 @@ irq:
   rti
 
 
-
+  section rodata
 message:  asciiz "Hello, word!                            "
 
-  include 4BitLCD.s
 
-
-  org $fffa
+  section .text.vectors
   word reset
   word reset
   word irq

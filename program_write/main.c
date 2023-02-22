@@ -31,10 +31,18 @@ uint16_t geti() {return get() | (get() << 8);}
 #define WRITE 5
 #define READ 6
 #define PAGE_WRITE 7
-#define INTERNALS 8
+#define SYNC 8
+#define SYNC_BYTE 0x69
 
-
-void ardread(char *buf, uint16_t len, uint16_t addr) {
+void sync() {
+  unsigned char c;
+  put(SYNC);
+  if ((c = get()) != SYNC_BYTE) {
+    printf("illegal sync byte! (0x%02x) exiting...\n", c);
+    exit(1);
+  }
+}
+void ardread(uint16_t addr, uint16_t len, char *buf) {
   put(SADDR); puti(addr);
   put(SLEN); puti(len);
 
@@ -51,6 +59,8 @@ void ardwrite(int addr, int len, char * buf) {
   for (int i = 0; i < len; i++) {
     put(buf[i]);
   }
+  /* this sync is necessary, idk why */
+  sync();
 }
 void ardpagewrite(int addr, char * buf) {
   if (addr & (64-1)) {printf("page write address not 64-byte aligned!!\n"); exit(1);}
@@ -77,28 +87,22 @@ void filewrite(char * f, int pos, int seek, int len) {
     uint16_t addr = pos + i * 64;
     char buf[64], obuf[64];
 
-    ardread(buf, 64, addr);
+    ardread(addr, 64, buf);
     dirty = 0;
     for (int j = 0; j < 64; j++) if (buf[j] != (obuf[j] = fgetc(in))) dirty++;
     while (dirty) {
-      printf("%04x:%04x\n", addr, addr + 64);
+      /* ardwrite to... maybe help EEPROM getting stuck? I have no idea */
+      ardwrite(addr, 1, buf);
+      printf("%04x:%04x %i\n", addr, addr + 64, dirty);
       ardpagewrite(addr, obuf);
-      ardread(buf, 64, addr);
+      ardread(addr, 64, buf);
       dirty = 0;
       for (int j = 0; j < 64; j++) if (buf[j] != obuf[j]) dirty++;
+      sync();
     }
   }
 }
 
-void dump_contents(int addr, int len) {
-  char buf[16];
-  for (int i = 0; i < len / 16; i++) {
-    ardread(buf, 16, addr + i * 16);
-    printf("%04x ",  addr + i * 16);
-    for (int j = 0; j < 16; j++) printf("%02x ", (unsigned char)buf[j]);
-    printf("\n");
-  }
-}
 void ardcheck(int addr, char value) {
   char g;
   put(SADDR); puti(addr);
@@ -134,7 +138,6 @@ int main(int argc, char * argv[]) {
   }
   char * writef = argc > 1 ? argv[1] : "a.out";
 
-  //sleep(2);
   printf("ready\n");
   printf("%i\n", get());
 
