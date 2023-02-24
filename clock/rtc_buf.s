@@ -10,6 +10,7 @@
 
 
 RTC_BUF_SIZE = $10  ; lcd RAM is $00 - $3f
+DEBUG=0
 
 ; from rtc.s
   extern rtc_write
@@ -90,8 +91,10 @@ _rtc_buf_write:
 
 
 _rtc_buf_flush:
-  ;lda #'f'
-  ;jsr print_char
+  if DEBUG
+  lda #'f'
+  jsr print_char
+  endif
 
 ; do not write out if dirty_high has not been changed from zero
 ; (meaning that no calls to _rtc_buf_write have been made),
@@ -110,16 +113,18 @@ _rtc_buf_flush:
   ;beq .buf_clean
   tax
 
-  ;lda #'w'
-  ;jsr print_char
-  ;lda dirty_high
-  ;clc
-  ;adc #'0'
-  ;jsr print_char
-  ;lda dirty_low
-  ;clc
-  ;adc #'0'
-  ;jsr print_char
+  if DEBUG
+  lda #'w'
+  jsr print_char
+  lda dirty_high
+  clc
+  adc #'0'
+  jsr print_char
+  lda dirty_low
+  clc
+  adc #'0'
+  jsr print_char
+  endif
 
   lda dirty_low
   jsr rtc_write
@@ -130,8 +135,10 @@ _rtc_buf_flush:
   sta dirty_low
 .buf_clean: ; no need to flush to rtc
 
-  ;lda #'r'
-  ;jsr print_char
+  if DEBUG
+  lda #'r'
+  jsr print_char
+  endif
 
 ; Read from RTC into buffer
   lda #<_rtc_buf

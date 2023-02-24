@@ -1,6 +1,4 @@
 
-
-
   include cregs.s
   include defs.s
 
@@ -42,21 +40,24 @@ CURSOR_BLINK=0
 
 ; ticks of timer2 runouts until periodic functions are run
 PERIODIC_TICKS = 8
-BUF_FLUSH_TICKS = 64
+; ticks until buffer is flushed
+; NOTE: I set ticks = ticks & (BUF_FLUSH_TICKS-1);
+;   -> which assumes that this is larger than periodic ticks (maybe add checks?)
+BUF_FLUSH_TICKS = 32
 ; = max(all tick checks)
 MAX_TICKS=BUF_FLUSH_TICKS
 
 NUM_MODES=2
 
-BUTTON_CLR=%01000000; PORTA
-BUTTON_MS =%10000000; PORTA
+BUTTON_CLR=%01000000
+BUTTON_MS =%10000000
 
   section text
 
 pre_init:
-  lda #%01000011
+  lda #((%11)|(%0000 << 2)|(BUTTON_CLR)) ; BUTTON_MS is input
   sta VIA1_DDRA
-  lda #(~$40)
+  lda #(~$40)     ; PB6 (RTC sqwout) is input
   sta VIA1_DDRB
   lda #$ff
   sta VIA2_DDRA
@@ -79,16 +80,19 @@ pre_init:
   lda #(CURSOR_ON<<1)|(CURSOR_BLINK)
   jsr initialize_lcd
 
-; RTC init
   jsr rtc_init
-; all pre-initialization complete, it's C time
+
+; all pre-initialization complete, let crt.s do C initialization now
   rts
 
 
+
 ; Enter the main timer2 loop
-; There are actually two loops happening here
-; -> one, that updates button every timer2 runout
-; -> two, that runs periodic code every PERIODIC_TICKS ticks
+; There are actually 3 loops happening here
+; 1 tick = 1 runout of timer2 = TIMER2_COUNT/32768
+; -> one,  (ticks=1)         that updates button every timer2 runout
+; -> two,  (PERIODIC_TICKS)  that runs periodic code based on current mode
+; -> three,(BUF_FLUSH_TICKS) that runs rtc_buf_flush
 _main:
 ; clear button states:
   lda BUTTON_PORT
@@ -187,45 +191,39 @@ update_buttons:
   lda #0
   sta _mode_select_edge
 ; update mode select value/edge
-  lda PORTA
+  lda BUTTON_PORT
   and #BUTTON_MS
   beq .low
 .pos:
-; read mode select is 1
-; trigger interrupt on negative edge
+; MS state is 1 (trigger next interrupt on negative edge)
   lda PCR
   and #~CA1_POS
   sta PCR
 
 ; Only go to next mode on positive edge
-; next mode (mode = (mode + 1 == NUM_MODES) ? 0 : mode + 1)
+; next mode (mode++; if (mode > NUM_MODES) mode = 0;)
   lda _mode
   inc
   cmp #NUM_MODES
-  bne .nonz
+  bcc .nonz
   lda #0
 .nonz:
   sta _mode
-
-  ;lda #1
-  bra .out
-.low:
-; read mode select is 0
-; trigger on positive edge
-  lda PCR
-  ora #CA1_POS
-  sta PCR
-  ;lda #0
-.out:
-  ;sta _mode_select_val
-
-
-; do init on new mode
+; C function do_init on new mode
   cli
   jsr _do_init
   sei
+
+  bra .out
+.low:
+; MS state is 0 (trigger next interrupt on positive edge)
+  lda PCR
+  ora #CA1_POS
+  sta PCR
+.out:
 .not_new:
 
+  if 0
 ; ---- check other buttons ----
   lda _button_edge ; UDLR buttons
   beq .no_button_edge
@@ -247,6 +245,7 @@ update_buttons:
   cli
   jsr _do_button_press
   sei
+  endif
 .no_button_edge:
   rts
 

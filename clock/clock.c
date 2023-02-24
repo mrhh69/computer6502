@@ -65,15 +65,15 @@ void clock_lcd_init() {
   /* first, rtc_read to make sure clock is running */
   rtc_buf_read(buf, 8, 0);
 
-  rtc_buf_write((char *)rtc_defaults, RTC_DEFAULT_LEN, 0);
+  //rtc_buf_write((char *)rtc_defaults, RTC_DEFAULT_LEN, 0);
 
   if (buf[0] & 0x80) {
     /* if not, then re-write rtc defaults */
-    //rtc_buf_write((char *)rtc_defaults, RTC_DEFAULT_LEN, 0);
+    rtc_buf_write((char *)rtc_defaults, RTC_DEFAULT_LEN, 0);
   }
   else if (buf[7] != rtc_defaults[7]) {
     /* rewrite control register separately */
-    //rtc_buf_write((char *)&rtc_defaults[7], 1, 7);
+    rtc_buf_write((char *)&rtc_defaults[7], 1, 7);
   }
 
   rtc_buf_flush();
@@ -88,11 +88,11 @@ static const char rtc_defaults[RTC_DEFAULT_LEN] = {
    * So, 0x15 == 1 and 5 (or 15 decimal)
    */
   0x00, // Seconds (top bit is CH, clock halt)
-  0x00, // Minutes
-  0x22, // Hours (bit 6 high is 12-hour mode select)
-  0x01, // Day of the week?
+  0x14, // Minutes
+  0x23, // Hours (bit 6 high is 12-hour mode select)
+  0x04, // Day of the week?
   0x23, // Day of the month
-  0x01, // month
+  0x02, // month
   0x23, // year
   0x13, // control register (OUT 0 0 SQWE 0 0 RS1 RS0)
 };

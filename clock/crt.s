@@ -124,8 +124,9 @@ irq:
   bit #INT_CB1
   bne .irq_cb1
   ; Should not happen hopefully:
+  sta VIA2_PORTA
   lda #$aa
-  sta PORTA
+  sta VIA1_PORTB
   stp
 
 .irq_timer1: ; Timer1 interrupt
