@@ -43,7 +43,7 @@ PERIODIC_TICKS = 8
 ; ticks until buffer is flushed
 ; NOTE: I set ticks = ticks & (BUF_FLUSH_TICKS-1);
 ;   -> which assumes that this is larger than periodic ticks (maybe add checks?)
-BUF_FLUSH_TICKS = 32
+BUF_FLUSH_TICKS = 64
 ; = max(all tick checks)
 MAX_TICKS=BUF_FLUSH_TICKS
 
@@ -117,9 +117,6 @@ _main:
   jsr _rtc_buf_flush
 
   jsr _do_init ; intial mode init
-
-  lda #'d'
-  jsr print_char
 
 .loop:
 ; set flag to 0
@@ -223,7 +220,7 @@ update_buttons:
 .out:
 .not_new:
 
-  if 0
+  if 1
 ; ---- check other buttons ----
   lda _button_edge ; UDLR buttons
   beq .no_button_edge

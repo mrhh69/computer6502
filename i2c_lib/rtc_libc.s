@@ -4,8 +4,8 @@
 
 
 ; From rtc.s:
-  extern rtc_write
-  extern rtc_read
+  ;extern rtc_write
+  ;extern rtc_read
 ; C Wrapper functions (for rtc.s)
   ;global _rtc_write
   ;global _rtc_read

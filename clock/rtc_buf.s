@@ -18,8 +18,8 @@ DEBUG=0
 
 
 ; aliases:
-  global _rtc_read
-  global _rtc_write
+  ;global _rtc_read
+  ;global _rtc_write
 ; functions:
   global _rtc_buf_read
   global _rtc_buf_write
@@ -33,7 +33,7 @@ DEBUG=0
 ; *buf -> r0
 ; addr -> A
 ; size -> X
-_rtc_read:
+;_rtc_read:
 _rtc_buf_read:
 ; copy rtc_buf -> buf
   stx r2
@@ -52,7 +52,7 @@ _rtc_buf_read:
 
 ; Write into RTC buffer, and update dirty
 
-_rtc_write:
+;_rtc_write:
 _rtc_buf_write:
 ; Update buffer dirty bounds
 ; (bounds that will have to be written to RTC)
@@ -79,7 +79,7 @@ _rtc_buf_write:
   stx r2
   tax
   ldy #0
-.loop:             ; BUG: write buffer read was not starting at zero
+.loop:
   lda (r0), y
   sta _rtc_buf, x
   iny
@@ -103,8 +103,14 @@ _rtc_buf_flush:
   beq .buf_clean
 
 ; Write into RTC between dirty_low and dirty_high
+; NOTE: buf has to be adjusted so that it points to &rtc_buf[dirty_low]
   lda #<_rtc_buf
   ldx #>_rtc_buf
+  clc
+  adc dirty_low
+  bcc .nocarry
+  inx
+.nocarry:
   sta r0
   stx r1
   lda dirty_high  ; [and they did] -> this is very unsafe, if (high-low) is negative, bad things happen

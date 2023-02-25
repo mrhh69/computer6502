@@ -3,6 +3,7 @@
 #include "i2c_lib/rtc.h"
 #include "clock.h"
 #include "clock_updater.h"
+#include "rtc_buf.h"
 
 #define COUNTS 4
 // 0xff -> block of black
@@ -34,15 +35,14 @@ static const struct field {
 };
 
 void clock_updater_periodic() {
-  /* NOTE: calling this and then using the blink effect causes a visual artefact -> fix? */
-  rtc_read(buf, 7, 0);
+  rtc_buf_read(buf, 7, 0);
   /* update with field_val */
   unsigned char field_b = fields[field].rtc;
   if (field < NUM_FIELDS) {
     if (buf[field_b] != ntortc(field_val)) {
       /* update, and push changes to RTC */
       buf[field_b] = ntortc(field_val);
-      rtc_write(&buf[field_b], 1, field_b);
+      rtc_buf_write(&buf[field_b], 1, field_b);
     }
   }
 
@@ -65,8 +65,9 @@ void clock_updater_periodic() {
 
 static void field_init() {
   if (field >= NUM_FIELDS) return;
-  rtc_read(buf, 1, fields[field].rtc);
-  field_val = rtcton(buf[0]);
+  unsigned char r;
+  rtc_buf_read(&r, 1, fields[field].rtc);
+  field_val = rtcton(r);
 }
 
 void clock_updater_button() {
