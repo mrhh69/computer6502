@@ -55,7 +55,7 @@ void do_show(uint16_t addr, char (*getaddr)(uint16_t)) {
 
 		/* update screen thing */
 		int rows = w.ws_row - 2;
-		uint16_t a = (addr & ~0xf) - (16 * rows / 2);
+		uint16_t a = (addr & ~0xf) - (16 * (rows >> 1));
 		for (int i = 0; i < rows; i++) {
 			/* row */
 			if (a == (addr & ~0xf)) printf("\033[1m");
@@ -83,8 +83,9 @@ char geta(uint16_t a) {
 }
 
 void commands() {
-	for (;;) {
-		printf("paused>");
+	for (int i = 0;;i++) {
+		if (i == 0) printf("paused>");
+    else        printf("tpause>");
 		char buf[256];
 		char *c = &buf[0];
 		while ((*c++ = getchar()) != '\n');
