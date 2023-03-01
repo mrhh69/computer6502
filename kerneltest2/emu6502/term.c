@@ -35,6 +35,9 @@ void do_show(uint16_t addr, char (*getaddr)(uint16_t)) {
   TCSANOW tells tcsetattr to change attributes immediately. */
   tcsetattr( STDIN_FILENO, TCSANOW, &newt);
 
+	/* Hide the cursor: */
+	printf("\e[?25l");
+
   /*This is your part:
   I choose 'e' to end input. Notice that EOF is also turned off
   in the non-canonical mode*/
@@ -49,30 +52,37 @@ void do_show(uint16_t addr, char (*getaddr)(uint16_t)) {
 
 		/* go back to 0 */
 		/* NOTE: this is causing screen tearing issues: fix by drawing over? */
-		clear();
-		for (int i = 0; i < w.ws_row - 1; i++) printf("\n");
+		//clear();
+		//for (int i = 0; i < w.ws_row - 1; i++) printf("\n");
 		gotoxy(0,0);
 
 		/* update screen thing */
 		int rows = w.ws_row - 2;
-		uint16_t a = (addr & ~0xf) - (16 * (rows >> 1));
+		uint16_t a = ((addr & ~0xf) - (16 * (rows >> 1)));
+		if (((addr & ~0xf) - (16 * (rows >> 1))) < 0) a = 0;
+		if (((addr & ~0xf) - (16 * (rows >> 1))) > 0xffff) a = 0xfff0;
+
 		for (int i = 0; i < rows; i++) {
 			/* row */
-			if (a == (addr & ~0xf)) printf("\033[1m");
+			//if (a == (addr & ~0xf)) printf("\033[4m");
+			//else printf("\033[0m");
 			printf("%04x: ", a);
-			printf("\033[0m");
 			for (int b = 0; b < 16; b++) {
 				if (a + b == addr) printf("\033[32m");
-				printf("%02x ", (unsigned char)getaddr(a + b));
-				printf("\033[0m");
+				printf("%02x", (unsigned char)getaddr(a + b));
+				if (a + b == addr) printf("\033[0m");
+				printf(" ");
 			}
 			a += 16;
 			if (i < rows - 1) printf("\n");
 		}
+		gotoxy(0,0);
 	}
 
   /*restore the old settings*/
   tcsetattr( STDIN_FILENO, TCSANOW, &oldt);
+	/* show the cursor again */
+	printf("\e[?25h");
 
 	clear();
 }

@@ -1,7 +1,7 @@
 
 *.vobj
 *.bin
-*.txt
+listing.txt
 a.out
 main
 program

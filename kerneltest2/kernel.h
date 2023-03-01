@@ -18,6 +18,8 @@ extern struct process {
 extern union data {
   /* NOTE: this is what is copied into the zero/stack page */
   struct {
+    uint16_t kregs[2];
+    unsigned char padding[10];
     unsigned char pid;
     unsigned char sp;
   } proc;
@@ -25,7 +27,7 @@ extern union data {
     unsigned char zp[256];
     unsigned char stack[256];
     unsigned char mem1[256];
-  } ppda; 
+  } ppda;
 } processes_data[NUM_PROCS];
 
 #endif

@@ -2,17 +2,26 @@
 
 	include defs.s
 	include cregs.s
+	include kdefs.s
 	include emu.s
 
 
   extern copy_out
+	extern copy_in
+	extern swtchin
+	extern _processes_data
 
-  
-; kernel temp registers
-kr0=$0e
 ; crt.s
 	global pre_init
 	global _main
+
+; user.s
+	extern _entry
+
+
+
+PROC_SP=$2ff
+PROC_SR=$20
 
 
 	section text
@@ -25,23 +34,32 @@ pre_init:
 _main:
 	DISPLAY "_main"
 
-  lda #$69
-  sta $020
-  lda #$70
-  sta $100
-  lda #$89
-  sta $200
+	lda #1
+	sta _processes   ; proc.flags
 
-  lda #<$1000
-  ldx #>$1000
+	lda #<PROC_SP
+	sta _processes_data+$40
+	lda #>PROC_SP
+	sta _processes_data+$41
+	lda #0
+	sta _processes_data+14 ; pid
+	lda #$f9
+	sta _processes_data+15 ; sp
+	lda #<_entry
+	sta _processes_data+$1fa+4 ; pc lsb
+	lda #>_entry
+	sta _processes_data+$1fa+5 ; pc msb
+	lda #PROC_SR
+	sta _processes_data+$1fa+3 ; sr
+
+
+  lda #<_processes_data
+  ldx #>_processes_data
   sta kr0
   stx kr0+1
-  jsr copy_out
+  jsr copy_in
 
-  DISPLAY "copy_out done"
+  DISPLAY "copy_in done"
   PAUSE
 
-
-	JAM
-
-	bra _main
+	jmp swtchin

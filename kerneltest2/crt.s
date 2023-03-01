@@ -9,18 +9,13 @@
 ;  - pre_init: called before any C initialization
 ;  - _main: main function
 ;
-; NOTE: interrupt functions already have A and Status registers preserved,
-;     :  but other registers and any non-volatile memory locations should be preserved
-;  - interrupt_timer1: timer1 runout
-;  - interrupt_timer2: timer2 runout
-;  - interrupt_ca1: ca1 interrupt
-;  - interrupt_cb1: cb1 interrupt
-;
 ;  - __[data/bss]_[loc/start/end]: linker-defined data/bss segment info
 
 
   include cregs.s
   include defs.s
+  include kdefs.s
+  include emu.s
 
 
 STACK_START = $4000
@@ -28,6 +23,9 @@ STACK_START = $4000
 
   extern _main
   extern pre_init
+; system (brk) calls
+  extern brk_swtch
+  extern brk_fork
 
   section .text.entry
 reset:
@@ -107,7 +105,61 @@ reset:
 
 
 
+
 irq:
+  pha
+  phx
+  tsx
+  lda $103,x
+  ;DISPLAY "irq"
+
+  bit #$10
+  bne .irq_brk
+
+.irq_hw:
+  DISPLAY "irq hw"
+  bra .irq_out
+
+
+.irq_brk:
+  ;DISPLAY "irq brk"
+
+  lda $105,x
+  sta kr0+1
+  lda $104,x
+  dec
+  bne .noz
+  inc kr0+1
+.noz:
+  sta kr0
+
+  lda (kr0)
+  cmp #BRK_SWTCH
+  beq .brk_swtch
+  cmp #BRK_FORK
+  beq .brk_fork
+
+  DISPLAY "BAD BRK CALL"
+  PAUSE
+  JAM
+
+.brk_swtch:
+  DISPLAY "brk call swtch"
+  PAUSE
+  plx
+  pla
+  jmp brk_swtch
+.brk_fork:
+  DISPLAY "brk call fork"
+  PAUSE
+  plx
+  pla
+  jmp brk_fork
+
+
+.irq_out:
+  plx
+  pla
   rti
 nmi:
   rti
