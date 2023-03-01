@@ -13,12 +13,42 @@ extern uint8_t read6502(uint16_t address);
 extern void print_internals();
 
 
+
+void c_update(int rows, uint16_t addr, char (*getaddr)(uint16_t)) {
+  
+		/* go back to 0 */
+		gotoxy(0,0);
+
+		/* update screen thing */
+		uint16_t a = ((addr & ~0xf) - (16 * (rows >> 1)));
+		if (((addr & ~0xf) - (16 * (rows >> 1))) < 0) a = 0;
+		if (((addr & ~0xf) - (16 * (rows >> 1))) > 0xffff) a = 0xfff0;
+
+		for (int i = 0; i < rows; i++) {
+			/* row */
+			//if (a == (addr & ~0xf)) printf("\033[4m");
+			//else printf("\033[0m");
+			printf("%04x: ", a);
+			for (int b = 0; b < 16; b++) {
+				if (a + b == addr) printf("\033[32m");
+				printf("%02x", (unsigned char)getaddr(a + b));
+				if (a + b == addr) printf("\033[0m");
+				printf(" ");
+			}
+			a += 16;
+			if (i < rows - 1) printf("\n");
+		}
+		gotoxy(0,0);
+}
+
+
 void do_show(uint16_t addr, char (*getaddr)(uint16_t)) {
 	struct winsize w;
   ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 	for (int i = 0; i < w.ws_row; i++) printf("\n");
-	//clear();
-	gotoxy(0,0);
+  
+  int rows = w.ws_row - 2;
+  c_update(rows, addr, getaddr);
 
 
   static struct termios oldt, newt;
@@ -49,34 +79,7 @@ void do_show(uint16_t addr, char (*getaddr)(uint16_t)) {
 		if (p == '[' && c == 'C') /* right */ addr = addr + 1  > 0xffff ? 0xffff : addr + 1;
 		if (p == '[' && c == 'D') /* left  */ addr = addr - 1  < 0 ? 0 : addr - 1;
 		p = c;
-
-		/* go back to 0 */
-		/* NOTE: this is causing screen tearing issues: fix by drawing over? */
-		//clear();
-		//for (int i = 0; i < w.ws_row - 1; i++) printf("\n");
-		gotoxy(0,0);
-
-		/* update screen thing */
-		int rows = w.ws_row - 2;
-		uint16_t a = ((addr & ~0xf) - (16 * (rows >> 1)));
-		if (((addr & ~0xf) - (16 * (rows >> 1))) < 0) a = 0;
-		if (((addr & ~0xf) - (16 * (rows >> 1))) > 0xffff) a = 0xfff0;
-
-		for (int i = 0; i < rows; i++) {
-			/* row */
-			//if (a == (addr & ~0xf)) printf("\033[4m");
-			//else printf("\033[0m");
-			printf("%04x: ", a);
-			for (int b = 0; b < 16; b++) {
-				if (a + b == addr) printf("\033[32m");
-				printf("%02x", (unsigned char)getaddr(a + b));
-				if (a + b == addr) printf("\033[0m");
-				printf(" ");
-			}
-			a += 16;
-			if (i < rows - 1) printf("\n");
-		}
-		gotoxy(0,0);
+    c_update(rows, addr, getaddr);
 	}
 
   /*restore the old settings*/

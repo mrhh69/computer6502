@@ -145,13 +145,13 @@ irq:
 
 .brk_swtch:
   DISPLAY "brk call swtch"
-  PAUSE
+  ;PAUSE
   plx
   pla
   jmp brk_swtch
 .brk_fork:
   DISPLAY "brk call fork"
-  PAUSE
+  ;PAUSE
   plx
   pla
   jmp brk_fork

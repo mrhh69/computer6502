@@ -38,13 +38,13 @@ _main:
 	sta _processes   ; proc.flags
 
 	lda #<PROC_SP
-	sta _processes_data+$40
+	sta _processes_data+sp
 	lda #>PROC_SP
-	sta _processes_data+$41
+	sta _processes_data+sp+1
 	lda #0
-	sta _processes_data+14 ; pid
+	sta _processes_data+PPDA_PID ; pid
 	lda #$f9
-	sta _processes_data+15 ; sp
+	sta _processes_data+PPDA_SP ; sp
 	lda #<_entry
 	sta _processes_data+$1fa+4 ; pc lsb
 	lda #>_entry

@@ -1,21 +1,13 @@
 
-
-all: always-submake main.bin
-
-#always-submake so that the make is called even when the object is already built,
-#to check for any change in the source files (which can only be done from sub-make)
-always-submake:
-	make -C user/
-
-
 VASM=vasm
 VLINK=vlink
 VBCC=vbcc
-LD_SCRIPT=../emu.ld
+LD_SCRIPT=user.ld
 TMP_VBCC_ASM=/tmp/tmp_vbcc_asm.s
 
-VASM_FLAGS=-wdc02 -I"../"
-VLINK_FLAGS=-Mlisting.txt
+VASM_FLAGS=-wdc02 -I"../" -I"../../"
+VLINK_FLAGS=-Mlisting.txt  -s -P _entry -P __user_data_loc
+VLINK_FLAGS+=-r -b o65-02 -o full.o65
 # 1+2+4+8+16+32+128+256
 VCC_FLAGS=-c02 -O=447
 VCA_FLAGS=-wdc02 -opt-branch
@@ -24,10 +16,11 @@ SRCS=  $(wildcard *.s)
 VOBJS= $(patsubst %.s,%.vobj,$(SRCS))
 CSRCS= $(wildcard *.c)
 VOBJS+=$(patsubst %.c,%.vobj,$(CSRCS))
-VOBJS+=user/full.o65
 
-main.bin:  $(VOBJS)
-	$(VLINK) $(VLINK_FLAGS) -b rawbin1 -o main.bin  -T $(LD_SCRIPT) $(VOBJS) $(RTC_OBJS) $(LCD_OBJS)
+
+full.o65:  $(VOBJS)
+	$(VLINK) $(VLINK_FLAGS) -T $(LD_SCRIPT) $(VOBJS) $(RTC_OBJS) $(LCD_OBJS)
+	#$(VLINK) -T test2.ld -Mlfinal.txt full.o65 -b o65-02 -o test2.o65  -mall
 
 
 %.vobj: %.s
@@ -39,7 +32,6 @@ main.bin:  $(VOBJS)
 	$(VASM) $(VCA_FLAGS) $(TMP_VBCC_ASM) -Fvobj -o $@
 
 clean:
-	rm -f *.vobj $(TMP_VBCC_ASM) main.bin listing.txt
-	make -C user/ clean
+	rm -f *.vobj *.o65 $(TMP_VBCC_ASM) main.bin listing.txt
 dump: main.bin
 	cat listing.txt | grep -v ": local abs" | ack --color-match=red --passthru "0x.... [_a-zA-Z0-9]*: global .*"

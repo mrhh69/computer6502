@@ -8,3 +8,7 @@ kr1=$02
 
 BRK_SWTCH=$01
 BRK_FORK =$02
+
+; ppda struct
+PPDA_PID=14
+PPDA_SP =15

@@ -8,11 +8,13 @@
 
 	section text
 
+  lda #>__user_data_loc
 _entry:
 	DISPLAY "entered _entry!"
 	PAUSE
 
-	ldx #2
+  lda #1
+  ldx #2
 	ldy #3
 
 	brk
@@ -21,10 +23,17 @@ _entry:
 	cmp #0
 	beq _entry_forked
 .loop:
+  lda _bss_var
+  ldx _data_var
 	DISPLAY "_entry.loop!"
-	PAUSE
-	inx
+	;PAUSE
+  inc
+  sta _bss_var
+  inx
+  stx _data_var
 	iny
+
+  PAUSE
 
 	brk
 	byte BRK_SWTCH
@@ -32,17 +41,31 @@ _entry:
 	bra .loop
 
 
-
 _entry_forked:
 .loop:
+  lda _bss_var
+  ldx _data_var
 	DISPLAY "_entry_forked .loop!"
 	PAUSE
-	inx
-	inx
-	iny
+  inc
+	inc
+  sta _bss_var
+  inx
+  inx
+  stx _data_var
+  iny
 	iny
 
 	brk
 	byte BRK_SWTCH
 	
 	bra .loop
+
+
+
+
+  section bss
+_bss_var: reserve 1
+
+  section data
+_data_var: byte $69

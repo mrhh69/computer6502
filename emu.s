@@ -26,3 +26,9 @@ DEBUG=1
 	byte $13
 	endif
 	endmacro
+
+  macro UPDATE
+  if DEBUG
+  byte $02
+  endif
+  endmacro

@@ -28,7 +28,8 @@ copy_out:
   inc kr1+1
 .noz:
 ; copy process image out
-  ldy #14
+; Don't store proc.pid
+  ldy #15
 .yloop1:
   lda $0000, y
   sta (kr0), y
@@ -65,7 +66,7 @@ copy_in:
   inc kr1+1
 .noz:
 ; copy process image in
-  ldy #14
+  ldy #PPDA_PID
 .yloop1:
   lda (kr0), y
   sta $000, y
@@ -95,16 +96,13 @@ copy_in:
 
 
 swtchin:
-  ;DISPLAY "swtchin"
-  ;PAUSE
-
-  ldx 15 ; load sp ((struct process *)0->proc.sp)
+  ldx PPDA_SP ; load sp
   txs
   pla
   plx
   ply
   DISPLAY "swtch Entering..."
-  PAUSE
+  UPDATE
   rti
 
 
@@ -116,8 +114,7 @@ brk_swtch:
 	phx
 	pha
 
-	lda 14 ; PID
-  PAUSE
+	lda PPDA_PID
 ; derive ppda from PID
 	sta kr0
 	asl
@@ -132,7 +129,7 @@ brk_swtch:
 	jsr copy_out
 
 ; get PID of next process
-	ldy 14
+	ldy PPDA_PID
 .loop:
 	iny
 	cpy #NUM_PROCS
@@ -197,15 +194,17 @@ brk_fork:
 	sta kr0+1
 	lda #<_processes_data
 	sta kr0
+; set the PID of the new process
+; (proc.pid is NOT copy_out'd)
   txa
-  ldy #14
+  ldy #PPDA_PID
   sta (kr0), y    ; set PID in ppda
-  DISPLAY "test"
-  PAUSE
 ; do a copy_out to the new process
 ; (copy the *active* ppda)
 ; NOTE: copy_out does NOT preserve y register
   jsr copy_out
+  ;DISPLAY "test"
+  ;PAUSE
 ; return a 1 to the calling process
   pla
   lda #1
@@ -220,7 +219,7 @@ brk_fork:
 
   section bss
 
-_processes:
-  reserve 1*NUM_PROCS
 _processes_data:
   reserve 256*3*NUM_PROCS
+_processes:
+  reserve 1*NUM_PROCS
