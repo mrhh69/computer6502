@@ -6,7 +6,6 @@
 	include emu.s
 
 
-  extern copy_out
 	extern copy_in
 	extern swtchin
 	extern _processes_data

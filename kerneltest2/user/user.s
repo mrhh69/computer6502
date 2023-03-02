@@ -13,6 +13,18 @@ _main:
 	DISPLAY "entered _entry!"
 	PAUSE
 
+  lda #LCD_NO
+  ldx #$69
+.ploop:
+  brk
+  byte BRK_PUTC
+  DISPLAY "_entry putc"
+  PAUSE
+  inx
+  bra .ploop
+
+  JAM
+
   ;lda #1
 	;sta _bss_var
   ldx #2

@@ -13,11 +13,12 @@
 
 
 	* Streams
-		- Global stream table
+		- ~~Global stream table~~
 			* 14-byte FIFO
 			* 1-byte last emptied pointer (last byte that was dealt with in the buf)
 			* 1-byte last written pointer (last byte that was written into the buf)
-		- PUTC system call
+		- ~~PUTC system call~~
+      * ~~Add checks for buffer overflows~~
 		- ?GETC system call
 		- Stream #0 is LCD stream
 			* ONLY writes to it are allowed
