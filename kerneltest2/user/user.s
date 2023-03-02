@@ -3,17 +3,18 @@
 	include emu.s
 
 
-	global _entry
+	global _main
 
 
 	section text
 
-  lda #>__user_data_loc
-_entry:
+
+_main:
 	DISPLAY "entered _entry!"
 	PAUSE
 
-  lda #1
+  ;lda #1
+	;sta _bss_var
   ldx #2
 	ldy #3
 
@@ -23,17 +24,17 @@ _entry:
 	cmp #0
 	beq _entry_forked
 .loop:
+	DISPLAY "_entry.loop!"
+	PAUSE
+
   lda _bss_var
   ldx _data_var
-	DISPLAY "_entry.loop!"
 	;PAUSE
   inc
   sta _bss_var
   inx
   stx _data_var
 	iny
-
-  PAUSE
 
 	brk
 	byte BRK_SWTCH
@@ -43,10 +44,11 @@ _entry:
 
 _entry_forked:
 .loop:
-  lda _bss_var
-  ldx _data_var
 	DISPLAY "_entry_forked .loop!"
 	PAUSE
+	
+  lda _bss_var
+  ldx _data_var
   inc
 	inc
   sta _bss_var
@@ -58,7 +60,7 @@ _entry_forked:
 
 	brk
 	byte BRK_SWTCH
-	
+
 	bra .loop
 
 

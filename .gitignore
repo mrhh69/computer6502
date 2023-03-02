@@ -1,6 +1,7 @@
 
 *.vobj
 *.bin
+*.o65
 listing.txt
 a.out
 main

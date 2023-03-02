@@ -10,18 +10,11 @@
 	extern copy_in
 	extern swtchin
 	extern _processes_data
+	extern exec
 
 ; crt.s
 	global pre_init
 	global _main
-
-; user.s
-	extern _entry
-
-
-
-PROC_SP=$2ff
-PROC_SR=$20
 
 
 	section text
@@ -34,23 +27,16 @@ pre_init:
 _main:
 	DISPLAY "_main"
 
-	lda #1
-	sta _processes   ; proc.flags
+	lda #<entry_user
+	ldx #>entry_user
+	sta kr0
+	stx kr0+1
 
-	lda #<PROC_SP
-	sta _processes_data+sp
-	lda #>PROC_SP
-	sta _processes_data+sp+1
-	lda #0
-	sta _processes_data+PPDA_PID ; pid
-	lda #$f9
-	sta _processes_data+PPDA_SP ; sp
-	lda #<_entry
-	sta _processes_data+$1fa+4 ; pc lsb
-	lda #>_entry
-	sta _processes_data+$1fa+5 ; pc msb
-	lda #PROC_SR
-	sta _processes_data+$1fa+3 ; sr
+	ldx #0
+	jsr exec
+
+	DISPLAY "exec done!"
+	PAUSE
 
 
   lda #<_processes_data
@@ -63,3 +49,9 @@ _main:
   PAUSE
 
 	jmp swtchin
+
+
+
+	global entry_user
+entry_user:
+	incbin "user/out.bin"

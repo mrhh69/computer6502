@@ -18,17 +18,6 @@ SECTIONS {
   }
   __text_size = SIZEOF(text) + SIZEOF(rodata);
 
-  user.text : {
-    *(.text);
-  }
-
-  user.data : {
-    *(.data);
-  }
-  user.bss (NOLOAD) : {
-    *(.bss);
-  }
-  __user_data_loc = LOADADDR(user.data);
 
 
   . = 0x1000;
@@ -46,8 +35,6 @@ SECTIONS {
   __bss_start = ADDR(bss);
   __bss_size = SIZEOF(bss);
   __bss_end = __bss_start + __bss_size;
-
-  
 
 
 

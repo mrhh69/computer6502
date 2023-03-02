@@ -13,6 +13,9 @@
   global brk_swtch
   global brk_fork
 
+  global exec
+
+
   section text
 ; proc data address in kr0
 copy_out:
@@ -211,6 +214,104 @@ brk_fork:
   pha
   jmp swtchin
 
+
+
+
+
+exec:
+  lda #1
+  sta _processes, x
+; convert PID to ppda pointer
+  txa
+  sta kr1
+	asl
+	clc
+	adc kr1
+	clc
+	adc #>_processes_data
+	sta kr1+1
+	lda #<_processes_data
+	sta kr1
+
+; set up base image
+  ldy #sp
+  lda #<PROC_SP
+	sta (kr1),y
+  iny
+	lda #>PROC_SP
+	sta (kr1),y    ; sw sp
+
+	lda #0
+  ldy #PPDA_PID
+	sta (kr1),y ; pid
+	lda #$f9
+  ldy #PPDA_SP
+	sta (kr1),y ; hw sp
+
+  inc kr1+1
+  lda #PROC_SR
+  ldy #$fa+3
+	sta (kr1),y ; sr
+
+; get entry point
+  ldy #0
+  lda (kr0),y
+  ldy #$fa+4
+	sta (kr1),y ; pc lsb
+  ldy #1
+	lda (kr0),y
+  ldy #$fa+5
+	sta (kr1),y ; pc msb
+
+
+; do bss and data initialization
+; put bss_start in x
+; put bss_size in y
+  ldy #6
+  lda (kr0),y
+  tax
+  iny
+  lda (kr0),y
+  tay
+; move ppda pointer to ppda+$200
+; (NOTE: kr1 is already at ppda+$100)
+  inc kr1+1
+; do bss init
+.bss_loop:
+  lda #0
+  sta (kr1),y
+  iny
+  dex
+  bne .bss_loop
+
+; put data_loc in kr2
+; put data_start in y
+; put data_size in x
+  ldy #2
+  lda (kr0),y
+  sta kr2
+  iny
+  lda (kr0),y
+  sta kr2+1
+
+  iny
+  lda (kr0),y
+  tax
+  iny
+  lda (kr0),y
+  tay
+
+.data_loop:
+  lda (kr2)
+  sta (kr1),y
+  inc kr2
+  bne .noz
+  inc kr2+1
+.noz:
+  dex
+  bne .data_loop
+
+  rts
 
 
 

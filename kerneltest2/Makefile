@@ -1,12 +1,8 @@
 
-
 all: always-submake main.bin
 
-#always-submake so that the make is called even when the object is already built,
-#to check for any change in the source files (which can only be done from sub-make)
 always-submake:
-	make -C user/
-
+	make -C user/ out.bin S_ADDR=0
 
 VASM=vasm
 VLINK=vlink
@@ -24,10 +20,18 @@ SRCS=  $(wildcard *.s)
 VOBJS= $(patsubst %.s,%.vobj,$(SRCS))
 CSRCS= $(wildcard *.c)
 VOBJS+=$(patsubst %.c,%.vobj,$(CSRCS))
-VOBJS+=user/full.o65
 
-main.bin:  $(VOBJS)
-	$(VLINK) $(VLINK_FLAGS) -b rawbin1 -o main.bin  -T $(LD_SCRIPT) $(VOBJS) $(RTC_OBJS) $(LCD_OBJS)
+#FOR SOME REASON USING $(shell ) IS DIFFERENT FROM NORMAL COMMANDS
+# (changed files aren't updating)
+# AND I HAVE NO CLUE WHYYY
+
+main.bin:  $(VOBJS) user/out.bin
+	$(VLINK) $(VLINK_FLAGS) -b rawbin1 -o main.bin  -T $(LD_SCRIPT) $(VOBJS)
+	#$$(printf '%d\n' 0x`sed -n 's/^  0x\([0-9a-f]*\) entry_user.*$$/\1/p' < listing.txt`)
+	#$(shell printf '%d\n' 0x$(shell sed -n 's/^  0x\([0-9a-f]*\) entry_user.*$$/\1/p' < listing.txt))
+	make -C user/ -B out.bin  S_ADDR=$$(printf '%d\n' 0x`sed -n 's/^  0x\([0-9a-f]*\) entry_user.*$$/\1/p' < listing.txt`)
+	make -B main.vobj
+	$(VLINK) $(VLINK_FLAGS) -b rawbin1 -o main.bin  -T $(LD_SCRIPT) $(VOBJS)
 
 
 %.vobj: %.s
@@ -39,7 +43,7 @@ main.bin:  $(VOBJS)
 	$(VASM) $(VCA_FLAGS) $(TMP_VBCC_ASM) -Fvobj -o $@
 
 clean:
-	rm -f *.vobj $(TMP_VBCC_ASM) main.bin listing.txt
+	rm -f *.vobj $(TMP_VBCC_ASM) main.bin
 	make -C user/ clean
 dump: main.bin
 	cat listing.txt | grep -v ": local abs" | ack --color-match=red --passthru "0x.... [_a-zA-Z0-9]*: global .*"
