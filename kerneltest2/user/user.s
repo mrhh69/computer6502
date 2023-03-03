@@ -9,18 +9,33 @@
 	section text
 
 
+	macro CPUTC
+	brk
+	byte BRK_PUTC
+	endmacro
+
 _main:
 	DISPLAY "entered _entry!"
 	PAUSE
 
-  lda #LCD_NO
-  ldx #$69
+	lda #LCD_NO
 .ploop:
-  brk
-  byte BRK_PUTC
+  ldx #LCD_C_LCDINS
+	CPUTC
+	ldx _data_var
+	CPUTC
+	ldx #LCD_C_PUTC
+	CPUTC
+	lda _data_var
+	sec
+	sbc #56
+	tax
+	lda #LCD_NO
+	CPUTC
+
   DISPLAY "_entry putc"
   PAUSE
-  inx
+  inc _data_var
   bra .ploop
 
   JAM
@@ -58,7 +73,7 @@ _entry_forked:
 .loop:
 	DISPLAY "_entry_forked .loop!"
 	PAUSE
-	
+
   lda _bss_var
   ldx _data_var
   inc
@@ -74,8 +89,6 @@ _entry_forked:
 	byte BRK_SWTCH
 
 	bra .loop
-
-
 
 
   section bss

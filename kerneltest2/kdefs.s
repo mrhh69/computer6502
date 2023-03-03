@@ -23,3 +23,9 @@ PROC_SR=$20
 
 NUM_STREAMS = 1
 LCD_NO = 0
+; stream flags
+STREAM_LCD   = %10000000
+
+; lcd stream commands
+LCD_C_LCDINS = 1
+LCD_C_PUTC   = 2
