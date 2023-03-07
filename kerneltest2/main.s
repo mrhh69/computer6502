@@ -15,11 +15,38 @@
 	global pre_init
 	global _main
 
+; kalloc.c
+	extern _init_heap
+	extern _kalloc
+	extern _kfree
+	extern _tests
 
 	section text
 
+
+
+
+	global ___rsave8
+	global ___rload8
+; fuck you
+___rsave8:
+___rload8:
+	rts
+
+
+
+
 pre_init:
 	DISPLAY "pre_init"
+
+	jsr _init_heap
+
+	jsr _tests
+
+
+	JAM
+
+
 	rts
 
 

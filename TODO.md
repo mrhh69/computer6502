@@ -1,14 +1,9 @@
 # Software
 
 
-	* Add some memory management
-		- malloc
-		- free
-		- Find code "inspiration" from places
-			* Unix source code?
-			* ChatGPT?
-			* Online somewhere?
-		- some block size like ?16 bytes
+	* ~~Add some memory management~~
+		- ??some block size like ?16 bytes
+			-> or just make the block size a caller courtesy (calls should always align to 16)
 		- Could be useful
 			* Allocating dynamic PPDA's
 			* Allocating buffers for streams

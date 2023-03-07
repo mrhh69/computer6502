@@ -12,8 +12,8 @@ TMP_VBCC_ASM=/tmp/tmp_vbcc_asm.s
 
 VASM_FLAGS=-wdc02 -I"../"
 VLINK_FLAGS=-Mlisting.txt
-# 1+2+4+8+16+32+128+256
-VCC_FLAGS=-c02 -O=447
+# 1+2+4+8+16+256=287
+VCC_FLAGS=-c02 -O=287
 VCA_FLAGS=-wdc02 -opt-branch
 
 SRCS=  $(wildcard *.s)
