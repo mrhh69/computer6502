@@ -1,8 +1,11 @@
 
 all: always-submake main.bin
 
+PGMS=$(wildcard user/%.pgm/)
+BINS=$(patsubst %.pgm/,%.pgm/out.bin,$(PGMS))
+
 always-submake:
-	make -C user/ out.bin S_ADDR=0
+	make -C user/ $(BINS)
 
 VASM=vasm
 VLINK=vlink
@@ -10,7 +13,7 @@ VBCC=vbcc
 LD_SCRIPT=../emu.ld
 TMP_VBCC_ASM=/tmp/tmp_vbcc_asm.s
 
-VASM_FLAGS=-wdc02 -I"../"
+VASM_FLAGS=-wdc02 -esc -I"../"
 VLINK_FLAGS=-Mlisting.txt
 # 1+2+4+8+16+256=287
 VCC_FLAGS=-c02 -O=287
@@ -25,11 +28,10 @@ VOBJS+=$(patsubst %.c,%.vobj,$(CSRCS))
 # (changed files aren't updating)
 # AND I HAVE NO CLUE WHYYY
 
-main.bin:  $(VOBJS) user/out.bin
+main.bin:  $(VOBJS) $(BINS)
 	$(VLINK) $(VLINK_FLAGS) -b rawbin1 -o main.bin  -T $(LD_SCRIPT) $(VOBJS)
-	#$$(printf '%d\n' 0x`sed -n 's/^  0x\([0-9a-f]*\) entry_user.*$$/\1/p' < listing.txt`)
-	#$(shell printf '%d\n' 0x$(shell sed -n 's/^  0x\([0-9a-f]*\) entry_user.*$$/\1/p' < listing.txt))
-	make -C user/ -B out.bin  S_ADDR=$$(printf '%d\n' 0x`sed -n 's/^  0x\([0-9a-f]*\) entry_user.*$$/\1/p' < listing.txt`)
+	make -C user/ -B init.pgm/out.bin  S_ADDR=$$(printf '%d\n' 0x`sed -n 's/^  0x\([0-9a-f]*\) entry_init.*$$/\1/p' < listing.txt`)
+	make -C user/ -B test.pgm/out.bin  S_ADDR=$$(printf '%d\n' 0x`sed -n 's/^  0x\([0-9a-f]*\) entry_test.*$$/\1/p' < listing.txt`)
 	make -B main.vobj
 	$(VLINK) $(VLINK_FLAGS) -b rawbin1 -o main.bin  -T $(LD_SCRIPT) $(VOBJS)
 

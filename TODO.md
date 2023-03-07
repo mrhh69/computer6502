@@ -9,17 +9,12 @@
 			* Allocating buffers for streams
 			* Allocating variable buffers for block files/transfers
 
-	* User Program "files"
-		- Add a subdirectory for each "program" (.pgm file extension?)
+	* ~~User Program "files"~~
+		- ~~Add a subdirectory for each "program" (.pgm file extension?)~~
 		- For each of those do the following
 			* Add in main.s to list
 			* Add in ./Makefile
-		- Add a lookup table (in main.s)
-			* 14 chars null-terminated program name
-			* 2-byte pointer to program "file" location in ROM
-			* Use the lookup table in "exec" _system calls_ (not jmp exec),
-				for the user programs that have no other way to get file ROM location
-
+		- ~~Add a lookup table (in main.s)~~
 
 	* Streams
 		- ~~PUTC system call~~

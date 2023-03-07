@@ -26,6 +26,7 @@ STACK_START = $4000
 ; system (brk) calls
   extern brk_swtch
   extern brk_fork
+  extern brk_exec
   extern brk_putc
 
   section .text.entry
@@ -119,7 +120,7 @@ irq:
 
 .irq_hw:
   DISPLAY "irq hw"
-  bra .irq_out
+  jmp .irq_out
 
 
 .irq_brk:
@@ -139,6 +140,8 @@ irq:
   beq .brk_swtch
   cmp #BRK_FORK
   beq .brk_fork
+  cmp #BRK_EXEC
+  beq .brk_exec
   cmp #BRK_PUTC
   beq .brk_putc
 
@@ -158,6 +161,11 @@ irq:
   plx
   pla
   jmp brk_fork
+.brk_exec:
+  DISPLAY "brk call exec"
+  plx
+  pla
+  jmp brk_exec
 .brk_putc:
   DISPLAY "brk call putc"
   plx

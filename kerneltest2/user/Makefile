@@ -20,6 +20,8 @@ PRGRMS= $(wildcard *.pgm)
 BINS  = $(patsubst %.pgm,%.pgm/out.bin,$(PRGRMS))
 
 
+all: $(BINS)
+
 S_ADDR?=0
 
 .SECONDEXPANSION:
@@ -40,6 +42,6 @@ out.bin: $(VOBJS)
 	$(VASM) $(VCA_FLAGS) $(TMP_VBCC_ASM) -Fvobj -o $@
 
 clean:
-	rm -f *.vobj out.bin listing.txt
+	rm -f *.vobj $(BINS) listing.txt
 dump: main.bin
 	cat listing.txt | grep -v ": local abs" | ack --color-match=red --passthru "0x.... [_a-zA-Z0-9]*: global .*"

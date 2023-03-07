@@ -15,8 +15,29 @@
 	endmacro
 
 _main:
-	DISPLAY "entered _entry!"
+	DISPLAY "entered init!"
 	PAUSE
+
+  brk
+  byte BRK_FORK
+  cmp #0
+  bne .contmain
+; forked, so exec
+  lda #<l1
+  ldx #>l1
+  brk
+  byte BRK_EXEC
+  DISPLAY "exec RETURNED in init _main (bad)"
+  PAUSE
+  JAM
+.contmain:
+
+  section rodata
+l1: asciiz "test"
+
+  section text
+
+  bra .loop
 
 	lda #LCD_NO
 .ploop:

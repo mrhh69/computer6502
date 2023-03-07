@@ -12,8 +12,10 @@
 ; for crt.s (system calls)
   global brk_swtch
   global brk_fork
+  global brk_exec
 
   global exec
+  extern exec_table
 
 
   section text
@@ -130,7 +132,7 @@ brk_swtch:
 	sta kr0
 ; save process into mem ($000-$2ff are ok to modify now)
 	jsr copy_out
-
+swtch_no_copy:
 ; get PID of next process
 	ldy PPDA_PID
 .loop:
@@ -216,8 +218,9 @@ brk_fork:
 
 
 
-
-
+; initialize process slot with program file
+; takes pointer to program file in kr0
+; takes PID in x
 exec:
   lda #1
   sta _processes, x
@@ -241,7 +244,7 @@ exec:
 	lda #>PROC_SP
 	sta (kr1),y    ; sw sp
 
-	lda #0
+	txa
   ldy #PPDA_PID
 	sta (kr1),y ; pid
 	lda #$f9
@@ -313,6 +316,72 @@ exec:
 
   rts
 
+
+; system call wrapper for exec
+; exec takes a pointer to a file
+; brk_exec takes a char * (name of process) in a/x
+;  (user space)
+; NOTE: exec is just re-initializing the calling process' slot
+; meaning the current ppda does not have to be preserved
+brk_exec:
+  sta kr0
+  stx kr0+1
+
+  lda #<exec_table
+  ldx #>exec_table
+  sta kr1
+  stx kr1+1
+
+  ldx #0
+.tab_loop:
+  ldy #0
+.cmp_loop:
+  lda (kr1), y   ; load char from exec table
+  cmp (kr0), y   ; compare against called name
+  bne .failed
+  cmp #0
+  beq .found
+  iny
+  bra .cmp_loop
+  
+.failed:
+; this table entry does not match
+  lda kr1
+  clc
+  adc #16
+  sta kr1
+  bcc .noc
+  lda kr1+1
+.noc:
+  inx
+  cpx #NUM_USER
+  bne .tab_loop
+  
+; not matching exec entry found
+  DISPLAY "NO EXEC ENTRY FOUND"
+  PAUSE
+  JAM
+
+.found:
+; found matching process name
+; set up exec call
+  DISPLAY "found process"
+  PAUSE
+  ldy #14
+  lda (kr1),y
+  sta kr0
+  iny
+  lda (kr1),y
+  sta kr0+1
+
+  ldx PPDA_PID
+  DISPLAY "jumping to exec"
+  PAUSE
+  jsr exec
+  DISPLAY "exec ret"
+  PAUSE
+; extremely ugly solution here: FIX IT
+  jmp swtch_no_copy
 
 
 

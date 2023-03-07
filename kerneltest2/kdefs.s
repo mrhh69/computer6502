@@ -1,5 +1,6 @@
 
 
+NUM_USER=2
 
 
 NUM_PROCS=8
@@ -11,7 +12,8 @@ kr2=$04
 
 BRK_SWTCH=$01
 BRK_FORK =$02
-BRK_PUTC =$03
+BRK_EXEC =$03
+BRK_PUTC =$04
 
 ; ppda struct
 PPDA_PID=14
