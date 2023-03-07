@@ -6,8 +6,7 @@ LD_SCRIPT=user.ld
 TMP_VBCC_ASM=/tmp/tmp_vbcc_asm.s
 
 VASM_FLAGS=-wdc02 -I"../" -I"../../"
-VLINK_FLAGS=-Mlisting.txt
-VLINK_FLAGS+=-T$(LD_SCRIPT)
+VLINK_FLAGS=-T$(LD_SCRIPT)
 # 1+2+4+8+16+32+128+256
 VCC_FLAGS=-c02 -O=447
 VCA_FLAGS=-wdc02 -opt-branch
@@ -17,8 +16,17 @@ VOBJS= $(patsubst %.s,%.vobj,$(SRCS))
 CSRCS= $(wildcard *.c)
 VOBJS+=$(patsubst %.c,%.vobj,$(CSRCS))
 
+PRGRMS= $(wildcard *.pgm)
+BINS  = $(patsubst %.pgm,%.pgm/out.bin,$(PRGRMS))
+
 
 S_ADDR?=0
+
+.SECONDEXPANSION:
+
+$(BINS): header.vobj $$(patsubst %.s,%.vobj,$$(wildcard $$(patsubst %.pgm/out.bin,%.pgm/*.s,$$@)))
+	vlink $(VLINK_FLAGS) -M$(patsubst %.pgm/out.bin,%.pgm/listing.txt,$@) -Ttext $(S_ADDR)     -b rawbin1 -o $@  header.vobj $(patsubst %.s,%.vobj,$(wildcard $(patsubst %.pgm/out.bin,%.pgm/*.s,$@)))
+
 
 out.bin: $(VOBJS)
 	$(VLINK) $(VLINK_FLAGS) -Ttext $(S_ADDR)   -b rawbin1 -o out.bin    $(VOBJS)
@@ -32,6 +40,6 @@ out.bin: $(VOBJS)
 	$(VASM) $(VCA_FLAGS) $(TMP_VBCC_ASM) -Fvobj -o $@
 
 clean:
-	rm -f *.vobj *.o65 $(TMP_VBCC_ASM) out.bin listing.txt
+	rm -f *.vobj out.bin listing.txt
 dump: main.bin
 	cat listing.txt | grep -v ": local abs" | ack --color-match=red --passthru "0x.... [_a-zA-Z0-9]*: global .*"
