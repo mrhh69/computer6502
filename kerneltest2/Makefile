@@ -41,7 +41,7 @@ main.bin:  $(VOBJS) $(BINS)
 
 %.vobj: %.c
 	$(VBCC) $(VCC_FLAGS) $< -o=$(TMP_VBCC_ASM)
-	printf "\n\tinclude ../cregs.s\n" >> $(TMP_VBCC_ASM)
+	printf "\n\tinclude kcregs.s\n" >> $(TMP_VBCC_ASM)
 	$(VASM) $(VCA_FLAGS) $(TMP_VBCC_ASM) -Fvobj -o $@
 
 clean:

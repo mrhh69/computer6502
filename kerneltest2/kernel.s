@@ -1,5 +1,5 @@
 
-  include cregs.s
+  include kcregs.s
   include emu.s
   include kdefs.s
 
@@ -103,28 +103,21 @@ copy_in:
 swtchin:
   ldx PPDA_SP ; load sp
   txs
-  pla
-  plx
-  ply
-  DISPLAY "swtch Entering..."
-  UPDATE
-  rti
+  ;DISPLAY "swtch Entering..."
+  ;UPDATE
+  rts ;rti
 
 
 
 
 
 brk_swtch:
-	phy
-	phx
-	pha
-
 	lda PPDA_PID
 ; derive ppda from PID
-	sta kr0
+	sta r0
 	asl
 	clc
-	adc kr0
+	adc r0
 	clc
 	adc #>_processes_data
 	sta kr0+1
@@ -141,8 +134,6 @@ swtch_no_copy:
 	bcc .f
 	ldy #0
 .f:
-	;DISPLAY "try pid"
-	;PAUSE
 	lda _processes,y
 	bne .loopout
 	bra .loop
@@ -150,10 +141,10 @@ swtch_no_copy:
 ; y holds PID
 ; derive ppda from PID
 	tya
-	sta kr0
+	sta r0
 	asl
 	clc
-	adc kr0
+	adc r0
 	clc
 	adc #>_processes_data
 	sta kr0+1
@@ -168,11 +159,12 @@ swtch_no_copy:
 
 ; a and x are already preserved
 brk_fork:
-  phy
-	phx
 ; return a 0 to the forked process
-  lda #0
-	pha
+; set re-entry address to a wrapper entry
+  lda #>fork_entry
+  pha
+  lda #<fork_entry
+  pha
 ; find an available PID
   ldx #0
 .loop:
@@ -190,10 +182,10 @@ brk_fork:
   sta _processes, x   ; set proc.flag to 1, indicating slot is used
 ; convert PID to ppda pointer
   txa
-  sta kr0
+  sta r0
 	asl
 	clc
-	adc kr0
+	adc r0
 	clc
 	adc #>_processes_data
 	sta kr0+1
@@ -208,14 +200,17 @@ brk_fork:
 ; (copy the *active* ppda)
 ; NOTE: copy_out does NOT preserve y register
   jsr copy_out
-  ;DISPLAY "test"
-  ;PAUSE
-; return a 1 to the calling process
+; pull wrapper return off of the stack
   pla
+  pla
+; return a 1 to the calling process
   lda #1
-  pha
-  jmp swtchin
+  rts
 
+; wrapper entry for forked process
+fork_entry:
+  lda #0
+  rts
 
 
 ; initialize process slot with program file
@@ -226,63 +221,77 @@ exec:
   sta _processes, x
 ; convert PID to ppda pointer
   txa
-  sta kr1
+  sta r2
 	asl
 	clc
-	adc kr1
+	adc r2
 	clc
 	adc #>_processes_data
-	sta kr1+1
+	sta r2+1
 	lda #<_processes_data
-	sta kr1
+	sta r2
 
 ; set up base image
-  ldy #sp
+  ldy #PROC_SPL
   lda #<PROC_SP
-	sta (kr1),y
+	sta (r2),y
   iny
 	lda #>PROC_SP
-	sta (kr1),y    ; sw sp
+	sta (r2),y    ; sw sp
 
 	txa
   ldy #PPDA_PID
-	sta (kr1),y ; pid
-	lda #$f9
+	sta (r2),y ; pid
+; set kernel stack
+	lda #KSTACK_START-3
   ldy #PPDA_SP
-	sta (kr1),y ; hw sp
+	sta (r2),y ; hw sp
 
-  inc kr1+1
-  lda #PROC_SR
-  ldy #$fa+3
-	sta (kr1),y ; sr
+  inc r2+1
+  ;lda #PROC_SR
+  ;ldy #$fa+3
+	;sta (r2),y ; sr
+  lda #<exec_entry-1
+  ldy #KSTACK_START-2
+  sta (r2),y
+  lda #>exec_entry-1
+  iny
+  sta (r2),y
+  lda #USTACK_START-2  ; where user stack starts
+  iny
+  sta (r2),y
+
 
 ; get entry point
   ldy #0
-  lda (kr0),y
-  ldy #$fa+4
-	sta (kr1),y ; pc lsb
+  lda (r0),y
+  sec
+  sbc #1     ; important: subtract 1 (jsr does that)
+  ldy #USTACK_START-1
+	sta (r2),y ; pc lsb
   ldy #1
-	lda (kr0),y
-  ldy #$fa+5
-	sta (kr1),y ; pc msb
+	lda (r0),y
+  sbc #0     ; sub 1
+  ldy #USTACK_START-0
+	sta (r2),y ; pc msb
 
 
 ; do bss and data initialization
 ; put bss_start in x
 ; put bss_size in y
   ldy #6
-  lda (kr0),y
+  lda (r0),y
   tax
   iny
-  lda (kr0),y
+  lda (r0),y
   tay
 ; move ppda pointer to ppda+$200
-; (NOTE: kr1 is already at ppda+$100)
-  inc kr1+1
+; (NOTE: kr2 is already at ppda+$100)
+  inc r2+1
 ; do bss init
 .bss_loop:
   lda #0
-  sta (kr1),y
+  sta (r2),y
   iny
   dex
   bne .bss_loop
@@ -291,29 +300,36 @@ exec:
 ; put data_start in y
 ; put data_size in x
   ldy #2
-  lda (kr0),y
-  sta kr2
+  lda (r0),y
+  sta r4
   iny
-  lda (kr0),y
-  sta kr2+1
+  lda (r0),y
+  sta r4+1
 
   iny
-  lda (kr0),y
+  lda (r0),y
   tax
   iny
-  lda (kr0),y
+  lda (r0),y
   tay
 
 .data_loop:
-  lda (kr2)
-  sta (kr1),y
-  inc kr2
+  lda (r4)
+  sta (r2),y
+  inc r2
   bne .noz
-  inc kr2+1
+  inc r2+1
 .noz:
   dex
   bne .data_loop
 
+  rts
+
+  byte "................"
+exec_entry:
+  plx     ; switch to user stack
+  txs
+  lda #1  ; return 1
   rts
 
 
@@ -324,39 +340,39 @@ exec:
 ; NOTE: exec is just re-initializing the calling process' slot
 ; meaning the current ppda does not have to be preserved
 brk_exec:
-  sta kr0
-  stx kr0+1
+  sta r0
+  stx r0+1
 
   lda #<exec_table
   ldx #>exec_table
-  sta kr1
-  stx kr1+1
+  sta r2
+  stx r2+1
 
   ldx #0
 .tab_loop:
   ldy #0
 .cmp_loop:
-  lda (kr1), y   ; load char from exec table
-  cmp (kr0), y   ; compare against called name
+  lda (r2), y   ; load char from exec table
+  cmp (r0), y   ; compare against called name
   bne .failed
   cmp #0
   beq .found
   iny
   bra .cmp_loop
-  
+
 .failed:
 ; this table entry does not match
-  lda kr1
+  lda r2
   clc
   adc #16
-  sta kr1
+  sta r2
   bcc .noc
-  lda kr1+1
+  lda r2+1
 .noc:
   inx
   cpx #NUM_USER
   bne .tab_loop
-  
+
 ; not matching exec entry found
   DISPLAY "NO EXEC ENTRY FOUND"
   PAUSE
@@ -368,11 +384,11 @@ brk_exec:
   DISPLAY "found process"
   PAUSE
   ldy #14
-  lda (kr1),y
-  sta kr0
+  lda (r2),y
+  sta r0
   iny
-  lda (kr1),y
-  sta kr0+1
+  lda (r2),y
+  sta r0+1
 
   ldx PPDA_PID
   DISPLAY "jumping to exec"
@@ -380,7 +396,7 @@ brk_exec:
   jsr exec
   DISPLAY "exec ret"
   PAUSE
-; extremely ugly solution here: FIX IT
+; extremely ugly solution here: FIX IT?
   jmp swtch_no_copy
 
 

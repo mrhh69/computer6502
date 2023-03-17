@@ -183,6 +183,10 @@ uint8_t opcode, oldstatus;
 extern uint8_t read6502(uint16_t address);
 extern void write6502(uint16_t address, uint8_t value);
 
+/* addded by me: */
+extern void trace_rts(uint16_t pc);
+extern void trace_rti(uint16_t pc, uint8_t sr);
+
 //a few general functions used by various other functions
 void push16(uint16_t pushval) {
     write6502(BASE_STACK + sp, (pushval >> 8) & 0xFF);
@@ -730,11 +734,13 @@ static void rti() {
     status = pull8();
     value = pull16();
     pc = value;
+    trace_rti(pc, status);
 }
 
 static void rts() {
     value = pull16();
     pc = value + 1;
+    trace_rts(pc);
 }
 
 static void sbc() {

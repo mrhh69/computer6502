@@ -133,10 +133,44 @@ void print_internals() {
     portA & USER);
 }
 
+/* global flags */
+int do_trace_rts = 0;
+int do_trace_rti = 0;
 
+void trace_rts(uint16_t pc) {
+  if (do_trace_rts) printf("\trts: 0x%04x\n", pc);
+}
+void trace_rti(uint16_t pc, uint8_t sr) {
+  if (do_trace_rti) printf("\trti: 0x%04x (0x%02x)\n", pc, sr);
+}
 
 int main(int argc, char * argv[]) {
-  char * infile = argc > 1 ? argv[1] : "a.out";
+  char * infile = "a.out";
+  int finf = 0;
+  for (int i = 1; i < argc; i++) {
+    char * s = argv[i];
+    if (s[0] == '-') {
+      switch (s[1]) {
+        case 't':
+          switch (s[2]) {
+            case 's': do_trace_rts = 1; break;
+            case 'i': do_trace_rti = 1; break;
+            case 0:   do_trace_rts = 1; do_trace_rti = 1; break;
+            default: printf("unkown option for -t: '%c'\n", s[2]);
+          }
+          break;
+        default:
+          printf("unkown flag -'%c'\n", s[1]);
+      }
+    }
+    else if (!finf) {
+      infile = s; finf = 1;
+    }
+    else {
+      printf("more than one input file! ('%s')\n", s);
+    }
+  }
+
   init(infile);
   printf("Loaded Memory from '%s'\n\n", infile);
 
@@ -191,7 +225,7 @@ int main(int argc, char * argv[]) {
     if (read6502(pc) == 0x44) {
       exit(a);
     }
-
+    //printf("%04x:%02x\n", pc, read6502(pc));
     step6502();
 
     if (clockRun) {

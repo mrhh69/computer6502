@@ -1,4 +1,5 @@
 
+  include kcregs.s
   include kdefs.s
   include emu.s
 
@@ -18,39 +19,39 @@ brk_putc:
   asl
   endrepeat
   adc #<_streams
-  sta kr0
+  sta r0
   lda #>_streams
   adc #0
-  sta kr0+1
+  sta r0+1
 
   ldy #2
-  lda (kr0), y     ; check size
+  lda (r0), y     ; check size
   cmp #8
   bcs .buf_full
 
   ldy #1
-  lda (kr0), y  ; stream start ptr into a
+  lda (r0), y  ; stream start ptr into a
   iny
   clc
-  adc (kr0), y  ; add size to get end
+  adc (r0), y  ; add size to get end
   and #8-1      ; wrap around cicrular buffer (size 8)
   clc
   adc #3        ; offset into stream.buf
   tay
   txa
-  sta (kr0), y
+  sta (r0), y
   ; increment size and store back
   ldy #2
-  lda (kr0), y
+  lda (r0), y
   inc
-  sta (kr0), y
+  sta (r0), y
   cmp #8
   bcc .nog
   DISPLAY "streambuf just filled"
   ;PAUSE
 ; force empty here:
   ldy #0
-  lda (kr0), y
+  lda (r0), y
   bit #STREAM_LCD
   beq .lcd_empty
 
@@ -81,25 +82,25 @@ brk_putc:
 lcd_empty:
 ; check size byte
   ldy #2
-  lda (kr0), y
+  lda (r0), y
   cmp #2
   bcc .no_empty
 ; subtract 2 and store back
   dec
   dec
-  sta (kr0), y
+  sta (r0), y
 ; put start in x
   ldy #1
-  lda (kr0), y
+  lda (r0), y
   tax
-; get 2 bytes out of buffer into kr1
+; get 2 bytes out of buffer into kr2
   ;txa
   and #8-1
   clc
   adc #3
   tay
-  lda (kr0), y
-  sta kr1
+  lda (r0), y
+  sta r2
 
   txa
   inc
@@ -107,20 +108,20 @@ lcd_empty:
   clc
   adc #3
   tay
-  lda (kr0), y
-  sta kr1+1
+  lda (r0), y
+  sta r3
 ; update start byte to original + 2 (wrap around)
   txa
   inc
   inc
   and #8-1
   ldy #1
-  sta (kr0), y
+  sta (r0), y
 
 ; take action on these bytes
 ; check command byte first
-  lda kr1+1
-  ldx kr1
+  lda r3
+  ldx r2
   cpx #LCD_C_LCDINS
   beq .lcdins
   cpx #LCD_C_PUTC

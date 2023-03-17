@@ -1,0 +1,40 @@
+; 16 bit sp ($8e - $8f)
+sp = $8e
+; 8 bit regs ($90 - $af)
+r0  = $90
+r1  = $91
+r2  = $92
+r3  = $93
+r4  = $94
+r5  = $95
+r6  = $96
+r7  = $97
+r8  = $98
+r9  = $99
+r10 = $9a
+r11 = $9b
+r12 = $9c
+r13 = $9d
+r14 = $9e
+r15 = $9f
+r16 = $a0
+r17 = $a1
+r18 = $a2
+r19 = $a3
+r20 = $a4
+r21 = $a5
+r22 = $a6
+r23 = $a7
+r24 = $a8
+r25 = $a9
+r26 = $aa
+r27 = $ab
+r28 = $ac
+r29 = $ad
+r30 = $ae
+r31 = $af
+; 32 bit regs ($b0 - $bf)
+btmp0 = $b0
+btmp1 = $b4
+btmp2 = $b8
+btmp3 = $bc

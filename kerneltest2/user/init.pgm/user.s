@@ -20,6 +20,8 @@ _main:
 
   brk
   byte BRK_FORK
+	DISPLAY "returned fork"
+	UPDATE
   cmp #0
   bne .contmain
 ; forked, so exec
@@ -77,7 +79,6 @@ l1: asciiz "test"
 
   lda _bss_var
   ldx _data_var
-	;PAUSE
   inc
   sta _bss_var
   inx

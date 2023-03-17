@@ -38,10 +38,11 @@ out.bin: $(VOBJS)
 
 %.vobj: %.c
 	$(VBCC) $(VCC_FLAGS) $< -o=$(TMP_VBCC_ASM)
-	printf "\n\tinclude ../cregs.s\n" >> $(TMP_VBCC_ASM)
+	printf "\n\tinclude ucregs.s\n" >> $(TMP_VBCC_ASM)
 	$(VASM) $(VCA_FLAGS) $(TMP_VBCC_ASM) -Fvobj -o $@
 
 clean:
-	rm -f *.vobj $(BINS) listing.txt
+	rm -f *.vobj $(patsubst %.s,%.vobj,$(wildcard $(patsubst %.pgm,%.pgm/*.s,$(PRGRMS)))) $(BINS) listing.txt
+
 dump: main.bin
 	cat listing.txt | grep -v ": local abs" | ack --color-match=red --passthru "0x.... [_a-zA-Z0-9]*: global .*"

@@ -12,7 +12,7 @@
 ;  - __[data/bss]_[loc/start/end]: linker-defined data/bss segment info
 
 
-  include cregs.s
+  include kcregs.s
   include defs.s
   include kdefs.s
   include emu.s
@@ -109,13 +109,25 @@ reset:
 
 
 irq:
-  pha
+  phy
   phx
+  pha
+; save a/x in an accessible place (they could be important)
+  sta r2
+  stx r3
+; switch to kernel mode (stack)
+; put user sp on stack
   tsx
-  lda $103,x
-  ;DISPLAY "irq"
+  txa
+; restart kernel stack
+  ldx #KSTACK_START
+  txs
+  pha
 
-  bit #$10
+; check the status register (user stack)
+  tax
+  lda $104,x
+  bit #$10       ; brk flag
   bne .irq_brk
 
 .irq_hw:
@@ -124,18 +136,18 @@ irq:
 
 
 .irq_brk:
-  ;DISPLAY "irq brk"
-
+; get the byte after the brk instruction
+  lda $106,x
+  sta r0+1
   lda $105,x
-  sta kr0+1
-  lda $104,x
-  dec
-  bne .noz
-  inc kr0+1
+  sec
+  sbc #1
+  bcs .noz   ; TODO: check this math
+  dec r0+1
 .noz:
-  sta kr0
+  sta r0
 
-  lda (kr0)
+  lda (r0)
   cmp #BRK_SWTCH
   beq .brk_swtch
   cmp #BRK_FORK
@@ -151,34 +163,48 @@ irq:
 
 .brk_swtch:
   DISPLAY "brk call swtch"
-  ;PAUSE
-  plx
-  pla
-  jmp brk_swtch
+  lda r2
+  ldx r3
+  jsr brk_swtch
+  bra .call_out
 .brk_fork:
   DISPLAY "brk call fork"
-  ;PAUSE
-  plx
-  pla
-  jmp brk_fork
+  lda r2
+  ldx r3
+  jsr brk_fork
+  bra .call_out
 .brk_exec:
   DISPLAY "brk call exec"
-  plx
-  pla
-  jmp brk_exec
+  lda r2
+  ldx r3
+  jsr brk_exec
+  bra .call_out
 .brk_putc:
   DISPLAY "brk call putc"
-  plx
-  pla
-  pha
-  phx
+  lda r2
+  ldx r3
   jsr brk_putc
-  bra .irq_out
+  bra .call_out
 
 
-.irq_out:
+.call_out:
   plx
+  txs
+  plx   ; dummy pull A, return a register to process
+  plx
+  ply
+  DISPLAY "call out..."
+  UPDATE
+  rti
+.irq_out:
+; switch to user mode
+; (stack)
+  plx
+  txs
+; return back into process
   pla
+  plx
+  ply
   rti
 nmi:
   rti

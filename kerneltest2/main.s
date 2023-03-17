@@ -1,6 +1,6 @@
 
 	include defs.s
-	include cregs.s
+	include kcregs.s
 	include kdefs.s
 	include emu.s
 
@@ -9,11 +9,9 @@
 	extern swtchin
 	extern _processes_data
 	extern exec
-
 ; crt.s
 	global pre_init
 	global _main
-
 ; kalloc.c
 	extern _init_heap
 	;extern _kalloc
@@ -35,9 +33,8 @@ _main:
 
 	lda #<entry_init
 	ldx #>entry_init
-	sta kr0
-	stx kr0+1
-
+	sta r0
+	stx r0+1
 	ldx #0
 	jsr exec
 

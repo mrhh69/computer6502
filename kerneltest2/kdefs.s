@@ -8,7 +8,9 @@ NUM_PROCS=8
 ; kernel temp registers
 kr0=$00
 kr1=$02
-kr2=$04
+
+KSTACK_START = $3f
+USTACK_START = $ff
 
 BRK_SWTCH=$01
 BRK_FORK =$02
@@ -21,6 +23,7 @@ PPDA_SP =15
 ; defaults for ppda
 PROC_SP=$2ff
 PROC_SR=$20
+PROC_SPL=$ce    ; location of SP in user ppda
 
 
 NUM_STREAMS = 1
